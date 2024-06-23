@@ -1,0 +1,58 @@
+<%layout('./layouts/boilerplate')%>
+<style>
+    body{
+        overflow-x: hidden;
+    }
+</style>
+<body>
+    <div class="row mt-3" style="overflow: hidden !important;">
+        <h2 class="col-6 offset-1 mb-4">User Details:</h2>
+        <div class="col-6 offset-3">
+            <form action="/gotuserdetails" method="POST"  class="needs-validation" novalidate style="overflow: hidden !important;">
+            <div class="mb-3">
+                <label for="password" class="form-label">Name</label>
+                <input type="text" name="username" placeholder="enter your name" class="form-control" id="password" required>
+                <div class="invalid-feedback">
+                    Enter a valid Name
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">Age</label>
+                <input type="number" name="age" placeholder="enter age" class="form-control" id="password" required>
+                <div class="invalid-feedback">
+                    Enter a valid age
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">City</label>
+                <input type="text" name="city" placeholder="enter city" class="form-control" id="password" required>
+                <div class="invalid-feedback">
+                    Enter a valid city
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">Aadhar Number</label>
+                <input type="number" name="aadharno" placeholder="enter Aadhar no." class="form-control" id="password" required>
+                <div class="invalid-feedback">
+                    Enter a valid Aadhar No
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">Pan Number</label>
+                <input type="text" name="panno" placeholder="enter Pan no." class="form-control" id="password" required>
+                <div class="invalid-feedback">
+                    Enter a valid Pan No
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">Email Id</label>
+                <input type="text" name="emailid" placeholder="enter your email" class="form-control" id="password" required>
+                <div class="invalid-feedback">
+                    Enter a email id
+                </div>
+            </div>
+            <button class="btn btn-dark">Register</button>
+            </form>
+        </div>
+        <p>jhvasvjbhwjbv jkb <br>hjjsbf</p>
+</body>

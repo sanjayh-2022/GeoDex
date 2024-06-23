@@ -1,0 +1,103 @@
+<%layout('./layouts/boilerplate')%>
+<body>
+    <section class="mainbuyer py-5" >
+        <div class="container py-5">
+         
+             <span class="usercircle"><img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAkGBwgHBgkIBwgKCgkLDRYPDQwMDRsUFRAWIB0iIiAdHx8kKDQsJCYxJx8fLT0tMTU3Ojo6Iys/RD84QzQ5OjcBCgoKDQwNGg8PGjclHyU3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3N//AABEIAI8A4QMBIgACEQEDEQH/xAAaAAEBAQEBAQEAAAAAAAAAAAAAAwQCBQEH/8QALxABAAECAggFAwUBAAAAAAAAAAIBAwQSISIxMkFCUXERUmGBoRMUM5GxwdHwI//EABUBAQEAAAAAAAAAAAAAAAAAAAAB/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8A/cQAAAAAEpzzaI7H25Lh+qYAAAAAAAAAAAAOoSy9lmd3blygqAAAAAAAAAAAA5lXLF0ldrreAOAAAAAQxF7Lqx28fQHdy9C3vbelEa4qXLGnvpZwGimKlzRj80Vt34XPSvSrEA9IZsPe5Je1f4aQAAAAWhLNF0jbr4SWAAAAAAAAAAAZ61Wnu1RAAAAB8lXLGUuml58q5pSlLi23/wAE+zCAAqAAD0LcvqW4yee2YX8fvVFWAAAAXpXVQVt7oOwAAAAAAAAAcXN1JW5upAAAAAnf/DLswvRlTNGUetPB58qZZZZcAfAFQAAbML+P3qxvQtR+nbjH/eKK6AAAAUtbtU1LXEFAAAAAAAAAAcz3aotDOAAAAAhiLObXjt406rgPNG65Zhc9K9aI1wsuWUffQDOL0ws+aUfmq1uxCOttr6gnhrPPL2p/LSAAAAACtrdSWjTLEHQAAAAAAAAACVymt3VczjmiCIAAIYi9l1Le3jXoCk7sLe9LT04oyxXlj+tWYBf7qflj8n3U/LH5QAX+6n5Y/J91Pyx+UAGimKlzRp7LW70LnpXpVhAekM1i/wAlz2q0gAA6hTNJZxbjlj3dgAAAAAAAAAAAAlcjzOGhGccvYErs/p25S47Kd2Bpxld2PerMAAqAAAAAADbh5/Ut+tNDEvhK/wDSUetEVrdQjm7PkY5lqU8AfQAAAAAAAAAAAAAAAYsZYnLXhTxpSmmnFie0z3sPC7p2S60B5ovdwt2HLnp1p/SAACoAAAtbw12e7Hwp1roRUWrCWZylSddEf3aLWEhDTLWl67GgHylPB9AAAAAAAAAAAAAAAAAAABxO3Ce9Gle9HYDNLCWZcJU7Vc1wMPPJrAZPsoeeT7HB2o+averUAnC1CG7ClPVQAAAAAAAAAAAAAf/Z" alt=""></span>
+    
+        </div>
+    </section>
+    <section class="buyerprintingdetails">
+        <div class="row">
+            <h2 class="ms-3 mb-3">Land requested for registration:</h2>
+              <section class="linebyline ms-5 mt-4">
+                <table class="table">
+                    <thead>
+                      <tr>
+                        <th scope="col">Land id</th>
+                        <th scope="col">Land address</th>
+                        <th scope="col">Land survey No</th>
+                        <th scope="col">Land Price</th>
+                        <th scope="col">Land Docu</th>
+                        <th scope="col">Approve</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% landDetailsArray.forEach(request => { %>
+                          <tr>
+                              <td><%= request.landAddress %></td>
+                              <td><%= request.id %></td>
+                              <td><%= request.propertyid %></td>
+                              <td><%= request.landPrice %></td>
+                              <td><%= request.document %></td>
+                              <td>
+                                  <form action="/verify-land/<%= request.id %>" method="GET">
+                                      <button class="btn btn-dark" class="approvebutton"><i class="bi bi-check"></i></button>
+                                  </form>
+                              </td>
+                          </tr>
+                      <% }) %>
+                  </tbody>
+                  </table>
+              </section>
+        </div>
+    </section>
+    <section class="buyerprintingdetails">
+      <div class="row">
+          <h2 class="ms-3 mb-3">Buyer requested for registration:</h2>
+            <section class="linebyline ms-5 mt-4">
+              <table class="table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Buyer Name</th>
+                      <th scope="col">Age</th>
+                      <th scope="col">City</th>
+                      <th scope="col">Aadhar No</th>
+                      <th scope="col">Pan No</th>
+                      <th scope="col">Approve</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% userAddresses.forEach(user => { %>
+                        <tr>
+                            <td><%= user.name %></td>
+                            <td><%= user.age %></td>
+                            <td><%= user.city %></td>
+                            <td><%= user.aadharNumber %></td>
+                            <td><%= user.panNumber %></td>
+                            <td>
+                                <form action="/verify-buyer/<%= user.id %>" method="GET">
+                                    <button class="btn btn-dark" class="approvebutton"><i class="bi bi-check"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+                </table>
+            </section>
+      </div>
+  </section>
+  <section class="buyerprintingdetails">
+    <div class="row ms-5">
+        <h2 class="ms-4 mb-3">Approved Sale Requests:</h2>
+        <% if (approvedRequests.length === 0) { %>
+            <p class="offset-1 mt-2">No approved sale requests found.</p>
+        <% } else { %>
+            <% approvedRequests.forEach(function(request) { %>
+                <div class="card col-lg-4 mb-3 offset-1">
+                    <div class="card-body">
+                        <h5 class="card-title">Land ID: <%= request.landId %></h5>
+                        <p class="card-text">Land Address: <%= request.landAddress %></p>
+                        <p class="card-text">Land Price: <%= request.landPrice %> </p>
+                        <p class="card-text">Buyer ID: <%= request.buyerId %> </p>
+                        <p class="card-text">Buyer Name: <%= request.buyerName %> </p>
+                        <p class="card-text">Buyer Email: <%= request.buyerEmail %> </p>
+                        <form action="/process-transaction/<%= request.requestId %>" method="GET">
+                    </form>
+                    </div>
+            
+    </div>
+    <% }); %>
+        <% } %>
+</section>
+</body>

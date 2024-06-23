@@ -1,0 +1,81 @@
+<%layout('./layouts/boilerplate')%>
+<body>
+    <section class="main py-5" >
+        <div class="container py-5">
+         <div class="row py-5">
+           <div class="col-lg-6 py-5">
+             <p class="m-0 thchild1 pt-2 whtcolor">Real Estate On Chain</p>
+             <h1 style="font-size: 2rem;color: white;">Landchain</h1>
+             
+             <img src="https://res.cloudinary.com/dzbw89xnj/image/upload/v1715837680/home_drrxvz.png" alt="" class="homeimage">
+             <div class="line my-4 whtcolor"></div>
+             <p class="thchild2 whtcolor" style="font-weight: 500;">the NFT-based Land Record - Blockchain system</p>
+             <button class="mbtn1 mt-4 me-2">Read More</button>
+             <button class="mbtn2 mt-4">Cards</button>
+           </div>
+         </div>
+         <button class="mbtn2 w-50 mt-8" style="background-color: #f6851b; color:beige;" id="connect-wallet-btn">Connect Wallet</button>
+        </div>
+       </section>
+
+       <script src="https://cdn.ethers.io/lib/ethers-5.0.umd.min.js"></script>
+       <script>
+        document.getElementById('connect-wallet-btn').addEventListener('click', async () => {
+            try {
+                if (window.ethereum) {
+                    await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    const provider = new ethers.providers.Web3Provider(window.ethereum);
+                    const signer = provider.getSigner();
+                    const walletAddress = await signer.getAddress();
+                    const response = await fetch('/connect-wallet', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ walletAddress })
+                    });
+                    const data = await response.json();
+                    console.log(data.message);
+                    alert("Wallet Connected")
+                } else {
+                    console.error('MetaMask is not installed');
+                }
+            } catch (error) {
+                console.error('Error connecting wallet:', error);
+            }
+        });
+    </script>
+       <section style="overflow: hidden !important;position: relative;margin-top: 9rem;">
+        <h3 class="ms-5 mb-5" id="c1">Login as:</h3>
+        <div class="row row-cols-lg-3 ms-5">
+        <a href="#" ><div class="card mb-5">
+            <div class="img-wrapper">
+            <img src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8aG91c2UlMjBvd25lcnxlbnwwfHwwfHx8MA%3D%3D" alt="...">
+            </div>
+            <div class="card-body">
+            <h5 class="card-title head1" style="font-weight: 600;">Owner</h5>
+            <form action="/connectowner" method="GET"><button class=" btn btn-dark indexloginbutton">Login</button></form>
+            </div>
+        </div>
+        </a>
+        <a href="#" ><div class="card">
+            <div class="img-wrapper">
+            <img src="https://images.unsplash.com/photo-1521790797524-b2497295b8a0?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8YnV5ZXJ8ZW58MHx8MHx8fDA%3D" alt="...">
+            </div>
+            <div class="card-body">
+            <h5 class="card-title head1" style="font-weight: 600;">Buyer</h5>
+            <form action="/connectbuyer" method="GET"><button class=" btn btn-dark indexloginbutton">Login</button></form>
+            </div>
+        </div>
+        </a>
+        <a href="#"><div class="card">
+            <div class="img-wrapper">
+            <img src="https://media.istockphoto.com/id/1874174342/photo/a-woman-signing-a-real-estate-contract.webp?b=1&s=170667a&w=0&k=20&c=80vgjUJ8xl-vNqjnJJy4jRC28b6CtEseSnS4VHTwLrw=" alt="...">
+            </div>
+            <div class="card-body">
+            <h5 class="card-title head1" style="font-weight: 600;margin-top: -1px;">Govt Auth</h5>
+            <form action="/connectgovtauth" method="GET"><button class=" btn btn-dark indexloginbutton">Login</button></form>
+            </div>
+        </div>
+        </a>
+    </div>
+    </section>
+</body>

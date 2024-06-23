@@ -1,0 +1,23 @@
+<%layout('./layouts/boilerplate')%>
+<body>
+    <section class=" mt-3">
+            <div class="col-8 offset-1 mt-2 mb-2">
+               <h2>Land Details:</h2>
+            </div>
+            <div class=" col-6 offset-4 mt-2 show-card">
+                <img src="https://media.istockphoto.com/id/909423306/photo/modern-multilevel-house-exterior-with-pool.webp?b=1&s=170667a&w=0&k=20&c=lVkUVRVlGBio7oMSYkx_tQuydlhJnBkpnVSuBBHtRMM=" class="card-img-top show-image" alt="show-image">
+                <div class="showcard-body ">
+                    <p class="card-text">Owned by <i>Owner Name</i></p>
+                    <p class="card-text"><b>unit area: </b> <%= landDetails[0].area %></p>
+                    <p class="card-text"><b>land address: </b> <%= landDetails[0].address %> </p>
+                    <p class="card-text"><b>Price: </b><%= landDetails[0].landPrice %></p>
+                    <p class="card-text"><b>Property id: </b><%= landDetails[0].propertyid %> </p>
+                    <form method="GET" action="/request-for-buy/<%= landDetails[0].idland %>" style="display: contents;margin-bottom: 30rem !important;">
+                        <button class="btn btn-dark deletebutton">Buy</button>
+                    </form>  
+                </div>
+            </div>   
+    </section>
+    
+   
+</body>

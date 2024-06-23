@@ -1,0 +1,45 @@
+<%layout('./layouts/boilerplate')%>
+<style>
+    body{
+        overflow-x: hidden;
+    }
+</style>
+<body>
+    <div class="row mt-3" style="overflow: hidden !important;">
+        <h2 class="col-6 offset-1 mb-4">Government Authority Details:</h2>
+        <div class="col-6 offset-3">
+            <form action="/gotgovtauth" method="POST"  class="needs-validation" novalidate style="overflow: hidden !important;">
+            <div class="mb-3">
+                <label for="password" class="form-label">Name</label>
+                <input type="text" name="username" placeholder="enter your name" class="form-control" id="password" required>
+                <div class="invalid-feedback">
+                    Enter a valid Name
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">Age</label>
+                <input type="number" name="age" placeholder="enter age" class="form-control" id="password" required>
+                <div class="invalid-feedback">
+                    Enter a valid age
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">Designation</label>
+                <input type="text" name="designation" placeholder="enter Designation" class="form-control" id="password" required>
+                <div class="invalid-feedback">
+                    Enter a valid Designation
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">City</label>
+                <input type="text" name="city" placeholder="enter city" class="form-control" id="password" required>
+                <div class="invalid-feedback">
+                    Enter a valid city
+                </div>
+            </div>
+            
+            <button class="btn btn-dark">Register</button>
+            </form>
+        </div>
+        </div>
+</body>

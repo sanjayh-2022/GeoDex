@@ -1,0 +1,48 @@
+<%layout('./layouts/boilerplate')%>
+<body>
+    <section class="mainbuyer py-5" >
+        <div class="container py-5">
+         
+             <span class="usercircle"><img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAkGBwgHBgkIBwgKCgkLDRYPDQwMDRsUFRAWIB0iIiAdHx8kKDQsJCYxJx8fLT0tMTU3Ojo6Iys/RD84QzQ5OjcBCgoKDQwNGg8PGjclHyU3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3N//AABEIAI8A4QMBIgACEQEDEQH/xAAaAAEBAQEBAQEAAAAAAAAAAAAAAwQCBQEH/8QALxABAAECAggFAwUBAAAAAAAAAAIBAwQSISIxMkFCUXERUmGBoRMUM5GxwdHwI//EABUBAQEAAAAAAAAAAAAAAAAAAAAB/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8A/cQAAAAAEpzzaI7H25Lh+qYAAAAAAAAAAAAOoSy9lmd3blygqAAAAAAAAAAAA5lXLF0ldrreAOAAAAAQxF7Lqx28fQHdy9C3vbelEa4qXLGnvpZwGimKlzRj80Vt34XPSvSrEA9IZsPe5Je1f4aQAAAAWhLNF0jbr4SWAAAAAAAAAAAZ61Wnu1RAAAAB8lXLGUuml58q5pSlLi23/wAE+zCAAqAAD0LcvqW4yee2YX8fvVFWAAAAXpXVQVt7oOwAAAAAAAAAcXN1JW5upAAAAAnf/DLswvRlTNGUetPB58qZZZZcAfAFQAAbML+P3qxvQtR+nbjH/eKK6AAAAUtbtU1LXEFAAAAAAAAAAcz3aotDOAAAAAhiLObXjt406rgPNG65Zhc9K9aI1wsuWUffQDOL0ws+aUfmq1uxCOttr6gnhrPPL2p/LSAAAAACtrdSWjTLEHQAAAAAAAAACVymt3VczjmiCIAAIYi9l1Le3jXoCk7sLe9LT04oyxXlj+tWYBf7qflj8n3U/LH5QAX+6n5Y/J91Pyx+UAGimKlzRp7LW70LnpXpVhAekM1i/wAlz2q0gAA6hTNJZxbjlj3dgAAAAAAAAAAAAlcjzOGhGccvYErs/p25S47Kd2Bpxld2PerMAAqAAAAAADbh5/Ut+tNDEvhK/wDSUetEVrdQjm7PkY5lqU8AfQAAAAAAAAAAAAAAAYsZYnLXhTxpSmmnFie0z3sPC7p2S60B5ovdwt2HLnp1p/SAACoAAAtbw12e7Hwp1roRUWrCWZylSddEf3aLWEhDTLWl67GgHylPB9AAAAAAAAAAAAAAAAAAABxO3Ce9Gle9HYDNLCWZcJU7Vc1wMPPJrAZPsoeeT7HB2o+averUAnC1CG7ClPVQAAAAAAAAAAAAAf/Z" alt=""></span>
+    
+        </div>
+    </section>
+    <section style="height: 750px;position: relative;top: 15rem;">
+        <h2 class="" style="position: relative;margin-left: 10rem;">Login: </h2>
+        <form action="#" method="GET" class="connecting-form">
+            <div class="mb-3 col-9 mt-1">
+                <label for="walletid" class="form-label">Enter walletid:</label>
+                <input type="text" class="form-control ms-2 mb-3 mt-1" id="walletid" name="walletid" placeholder="enter wallet id">
+              </div>
+              <button class="ms-3 btn btn-dark">Submit</button>
+              <p class="mt-4">--------------------or---------------------</p>
+              <button class="connectwithmetamask mt-2" id="connect-wallet-btn">Connect with MetaMask</button>
+        </form>
+    </section>
+       <script src="https://cdn.ethers.io/lib/ethers-5.0.umd.min.js"></script>
+       <script>
+        document.getElementById('connect-wallet-btn').addEventListener('click', async () => {
+            try {
+                if (window.ethereum) {
+                    await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    const provider = new ethers.providers.Web3Provider(window.ethereum);
+                    const signer = provider.getSigner();
+                    const type='buyer'
+                    const walletAddress = await signer.getAddress();
+                    const response = await fetch('/connect-wallet', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ walletAddress, type })
+                    });
+                    const data = await response.json();
+                    console.log(data.message);
+                    alert("Wallet Connected")
+                } else {
+                    console.error('MetaMask is not installed');
+                }
+            } catch (error) {
+                console.error('Error connecting wallet:', error);
+            }
+        });
+    </script>
+</body>

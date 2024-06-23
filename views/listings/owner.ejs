@@ -1,0 +1,96 @@
+<%layout('./layouts/boilerplate')%>
+<body>
+    <section class="mainbuyer py-5" >
+        <div class="container py-5">
+         
+             <span class="usercircle"><img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAkGBwgHBgkIBwgKCgkLDRYPDQwMDRsUFRAWIB0iIiAdHx8kKDQsJCYxJx8fLT0tMTU3Ojo6Iys/RD84QzQ5OjcBCgoKDQwNGg8PGjclHyU3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3N//AABEIAI8A4QMBIgACEQEDEQH/xAAaAAEBAQEBAQEAAAAAAAAAAAAAAwQCBQEH/8QALxABAAECAggFAwUBAAAAAAAAAAIBAwQSISIxMkFCUXERUmGBoRMUM5GxwdHwI//EABUBAQEAAAAAAAAAAAAAAAAAAAAB/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8A/cQAAAAAEpzzaI7H25Lh+qYAAAAAAAAAAAAOoSy9lmd3blygqAAAAAAAAAAAA5lXLF0ldrreAOAAAAAQxF7Lqx28fQHdy9C3vbelEa4qXLGnvpZwGimKlzRj80Vt34XPSvSrEA9IZsPe5Je1f4aQAAAAWhLNF0jbr4SWAAAAAAAAAAAZ61Wnu1RAAAAB8lXLGUuml58q5pSlLi23/wAE+zCAAqAAD0LcvqW4yee2YX8fvVFWAAAAXpXVQVt7oOwAAAAAAAAAcXN1JW5upAAAAAnf/DLswvRlTNGUetPB58qZZZZcAfAFQAAbML+P3qxvQtR+nbjH/eKK6AAAAUtbtU1LXEFAAAAAAAAAAcz3aotDOAAAAAhiLObXjt406rgPNG65Zhc9K9aI1wsuWUffQDOL0ws+aUfmq1uxCOttr6gnhrPPL2p/LSAAAAACtrdSWjTLEHQAAAAAAAAACVymt3VczjmiCIAAIYi9l1Le3jXoCk7sLe9LT04oyxXlj+tWYBf7qflj8n3U/LH5QAX+6n5Y/J91Pyx+UAGimKlzRp7LW70LnpXpVhAekM1i/wAlz2q0gAA6hTNJZxbjlj3dgAAAAAAAAAAAAlcjzOGhGccvYErs/p25S47Kd2Bpxld2PerMAAqAAAAAADbh5/Ut+tNDEvhK/wDSUetEVrdQjm7PkY5lqU8AfQAAAAAAAAAAAAAAAYsZYnLXhTxpSmmnFie0z3sPC7p2S60B5ovdwt2HLnp1p/SAACoAAAtbw12e7Hwp1roRUWrCWZylSddEf3aLWEhDTLWl67GgHylPB9AAAAAAAAAAAAAAAAAAABxO3Ce9Gle9HYDNLCWZcJU7Vc1wMPPJrAZPsoeeT7HB2o+averUAnC1CG7ClPVQAAAAAAAAAAAAAf/Z" alt=""></span>
+    
+        </div>
+    </section>
+    <section class="buyerprintingdetails">
+        <div class="row">
+            <h2 class="offset-1 mb-3">Owner</h2>
+            <form action="/ownerdetails" method="GET">
+              <button class="btn btn-dark offset-1 mt-4" style="width: 10rem !important;">Register a land</button>
+            </form>
+        </div>
+    </section>
+    <section style="overflow: hidden !important;position: relative;margin-top: 20rem;">
+        <h3 class="ms-5 mb-5">Lands Registered:</h3>
+        <div class="row row-cols-lg-3 ms-5">
+            <% landDetailsArray.forEach(function(land) { %>
+                <a href="/owner/<%= land.id%>">
+                    <div class="card mb-5">
+                        <div class="img-wrapper">
+                            <img src="https://media.istockphoto.com/id/909423306/photo/modern-multilevel-house-exterior-with-pool.webp?b=1&s=170667a&w=0&k=20&c=lVkUVRVlGBio7oMSYkx_tQuydlhJnBkpnVSuBBHtRMM="
+                                alt="...">
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title head1" style="font-weight: 600;">Land <%= land.id %></h5>
+                            <p class="card-text per1">Area: <%= land.area %> sq ft</p>
+                            <p class="card-text per1">Price: &#8377; <%= land.landPrice %></p>
+                            <!-- Add more details as needed -->
+                        </div>
+                    </div>
+                </a>
+                <% }); %>
+    </div>
+    </section>
+    <section style="overflow: hidden !important;position: relative;margin-top: 7rem;">
+        <h3 class="ms-5 mb-5">Lands For Sale:</h3>
+        <div class="row row-cols-lg-3 ms-5">
+            <% landSaleArray.forEach(function(land) { %>
+                <a href="/owner/<%= land.id%>">
+                    <div class="card mb-5">
+                        <div class="img-wrapper">
+                            <img src="https://media.istockphoto.com/id/909423306/photo/modern-multilevel-house-exterior-with-pool.webp?b=1&s=170667a&w=0&k=20&c=lVkUVRVlGBio7oMSYkx_tQuydlhJnBkpnVSuBBHtRMM="
+                                alt="...">
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title head1" style="font-weight: 600;">Land <%= land.id %></h5>
+                            <p class="card-text per1">Area: <%= land.area %> sq ft</p>
+                            <p class="card-text per1">Price: &#8377; <%= land.landPrice %></p>
+                            <!-- Add more details as needed -->
+                        </div>
+                    </div>
+                </a>
+                <% }); %>
+    </div>
+    </section>
+    <section style="overflow: hidden !important;position: relative;margin-top: 7rem;">
+        <h3 class="ms-5 mb-5">Land Buy Requests</h3>
+        <table class="table ms-5">
+            <thead>
+                <tr>
+                    <th scope="col">Request ID</th>
+                    <th scope="col">Land ID</th>
+                    <th scope="col">Land Address</th>
+                    <th scope="col">Land Price</th>
+                    <th scope="col">Buyer ID</th>
+                    <th scope="col">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% receivedRequests.forEach(function(request) { %>
+                <tr>
+                    <td><%= request.requestId %></td>
+                    <td><%= request.landId %></td>
+                    <td><%= request.landAddress %></td>
+                    <td><%= request.landPrice %></td>
+                    <td><%= request.buyerId %></td>
+                    <td>
+                        
+                        <form action="/accept-buy-request/<%= request.requestId %>" method="GET" style="display: inline;">
+                            <button type="submit" class="btn btn-success">Accept</button>
+                        </form>
+                        <form action="/reject-buy-request/<%= request.requestId %>" method="GET" style="display: inline;">
+                            <button type="submit" class="btn btn-danger">Reject</button>
+                        </form>
+                        
+                    </td>
+                </tr>
+                <% }); %>
+            </tbody>
+        </table>
+    </section>
+</body>

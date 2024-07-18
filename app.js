@@ -2,7 +2,10 @@ const express = require('express')
 const fs = require('fs')
 const nodemailer = require('nodemailer')
 const path = require('path')
+const FormData = require('form-data')
+const axios = require('axios')
 const ethers = require('ethers')
+const multer = require('multer')
 const ejsmate = require('ejs-mate')
 const methodOverride = require('method-override')
 const dotenv = require('dotenv')
@@ -23,11 +26,22 @@ app.use(methodOverride('_method'))
 const abiPath = path.resolve(__dirname, 'public', 'cleanedLandRegistry.json')
 const abiJSON = fs.readFileSync(abiPath, 'utf8')
 const contractABI = JSON.parse(abiJSON)
+const abiPath2 = path.resolve(__dirname, 'public', 'cleanedLandNFT.json')
+const abiJSON2 = fs.readFileSync(abiPath2, 'utf8')
+const contractABI2 = JSON.parse(abiJSON2)
 const contractAddress = process.env.CONTRACT_ADDRESS
+const JWT = process.env.PINATA_JWT_KEY
 
 const provider = new ethers.providers.JsonRpcProvider(
   `https://eth-sepolia.g.alchemy.com/v2/${process.env.API_KEY}`
 )
+
+const uploadsDir = path.join(__dirname, 'uploads')
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir)
+}
+
+const upload = multer({ dest: uploadsDir })
 
 let walletAddress = null
 let signer = null
@@ -69,6 +83,44 @@ const ensureWalletAddress = async (req, res, next) => {
   }
 }
 
+app.post('/uploadDocument', upload.single('file'), async (req, res) => {
+  const file = req.file
+  console.log(file)
+  if (!file) {
+    return res.status(400).json({ error: 'No file uploaded' })
+  }
+  const filePath = file.path
+  try {
+    const formData = new FormData()
+    formData.append('file', fs.createReadStream(filePath))
+    const pinataMetadata = JSON.stringify({
+      name: file.originalname,
+    })
+    formData.append('pinataMetadata', pinataMetadata)
+
+    const pinataOptions = JSON.stringify({
+      cidVersion: 0,
+    })
+    formData.append('pinataOptions', pinataOptions)
+
+    const pinataResponse = await axios.post(
+      'https://api.pinata.cloud/pinning/pinFileToIPFS',
+      formData,
+      {
+        maxContentLength: Infinity, // Set maxContentLength instead of maxBodyLength
+        headers: {
+          Authorization: `Bearer ${JWT}`, // Use JWT for authorization
+          ...formData.getHeaders(),
+        },
+      }
+    )
+    ipfsHash = pinataResponse.data.IpfsHash
+    res.json({ ipfsHash })
+  } catch (error) {
+    console.log(error)
+  }
+})
+
 app.get('/', async (req, res) => {
   res.render('listings/index.ejs')
 })
@@ -85,7 +137,7 @@ app.post('/sendLandId', (req, res) => {
     port: 587,
     auth: {
       user: 'landchain.gov@gmail.com',
-      pass: 'yniu ubrs nlol aolv',
+      pass: 'qhlj kjko zgbe cxyk',
     },
     tls: { rejectUnauthorized: false },
   })
@@ -135,7 +187,7 @@ app.post('/registerUser', async (req, res) => {
 })
 
 app.get('/user', (req, res) => {
-  res.render('listings/user.ejs', { userId: '1', contractABI })
+  res.render('listings/user.ejs', { contractABI })
 })
 
 app.get('/govtauth', (req, res) => {
@@ -155,7 +207,99 @@ app.post('/registerGovtAuth', async (req, res) => {
 })
 
 app.get('/govt', (req, res) => {
-  res.render('listings/verifybygovt.ejs', { contractABI })
+  res.render('listings/verifybygovt.ejs', { contractABI, contractABI2 })
+})
+
+app.get('/landowned', (req, res) => {
+  res.render('listings/showpropowner.ejs', { contractABI })
+})
+
+app.get('/land', (req, res) => {
+  res.render('listings/showpropuser.ejs', { contractABI })
+})
+
+app.get('/tokendetails', (req, res) => {
+  res.render('listings/tokenURIdetails.ejs', { contractABI })
+})
+
+app.post('/setTokenURI', upload.single('file'), async (req, res) => {
+  const file = req.file
+  if (!file) {
+    return res.status(400).json({ error: 'No file uploaded' })
+  }
+  const filePath = file.path
+  try {
+    const formData = new FormData()
+    formData.append('file', fs.createReadStream(filePath))
+    const pinataMetadata = JSON.stringify({
+      name: file.originalname,
+    })
+    formData.append('pinataMetadata', pinataMetadata)
+
+    const pinataOptions = JSON.stringify({
+      cidVersion: 1, // Use CID version 1
+    })
+    formData.append('pinataOptions', pinataOptions)
+
+    const pinataResponse = await axios.post(
+      'https://api.pinata.cloud/pinning/pinFileToIPFS',
+      formData,
+      {
+        maxContentLength: Infinity, // Set maxContentLength instead of maxBodyLength
+        headers: {
+          Authorization: `Bearer ${JWT}`, // Use JWT for authorization
+          ...formData.getHeaders(),
+        },
+      }
+    )
+
+    const ipfsHash = pinataResponse.data.IpfsHash
+    console.log(pinataResponse)
+    const pinataLink = `ipfs://${ipfsHash}`
+    fs.unlinkSync(filePath)
+    const jsonContent = JSON.stringify({
+      name: req.body.name + "'s Land Token",
+      description: req.body.description,
+      image: pinataLink,
+      price: req.body.price,
+    })
+    const jsonFilePath = path.join(uploadsDir, `${req.body.sname}.json`)
+    fs.writeFileSync(jsonFilePath, jsonContent)
+    const jsonFormData = new FormData()
+    jsonFormData.append('file', fs.createReadStream(jsonFilePath))
+
+    const jsonPinataMetadata = JSON.stringify({
+      name: 'metadata.json', // JSON file metadata
+    })
+    jsonFormData.append('pinataMetadata', jsonPinataMetadata)
+
+    const jsonPinataOptions = JSON.stringify({
+      cidVersion: 1, // Use CID version 1
+    })
+    jsonFormData.append('pinataOptions', jsonPinataOptions)
+
+    const jsonPinataResponse = await axios.post(
+      'https://api.pinata.cloud/pinning/pinFileToIPFS',
+      jsonFormData,
+      {
+        maxContentLength: Infinity, // Set maxContentLength instead of maxBodyLength
+        headers: {
+          Authorization: `Bearer ${JWT}`, // Use JWT for authorization
+          ...jsonFormData.getHeaders(),
+        },
+      }
+    )
+
+    // Clean up the JSON file
+    fs.unlinkSync(jsonFilePath)
+
+    // Return the hash of the uploaded JSON file
+    const jsonPinataLink = `https://gateway.pinata.cloud/ipfs/${jsonPinataResponse.data.IpfsHash}`
+    res.json({ jsonPinataLink })
+  } catch (error) {
+    console.error('Error uploading to Pinata:', error)
+    res.status(500).json({ error: 'Error uploading to Pinata' })
+  }
 })
 
 app.post('/gotownerdetails', ensureWalletAddress, async (req, res) => {

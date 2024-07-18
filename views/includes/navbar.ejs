@@ -1,20 +1,42 @@
-<nav class="navbar navbar-expand-lg pb-3 border-bottom sticky-top" style="overflow: hidden;">
-    <div class="container-fluid">
-        <a class="navbar-brand ms-4" href="/">LandChain</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse justify-content-center" id="navbarNavAltMarkup">
-            <div class="navbar-nav ms-auto">      
-  <a class="nav-link " aria-current="page" href="/owner">Owner</a>
-                <a class="nav-link " href="/verifybygovt">Govt Auth</a>
-                <a class="nav-link " href="/registeredUsers">Buyer</a>
-                <a class="nav-link " href="/ownerdetails">Owner Register</a>
-                <a class="nav-link " href="/userdetails">Buyer Register</a>
-                <a class="nav-link " href="/govtauth">Govt Auth Register</a>
-
-            </div>
+<!--==================== HEADER ====================-->
+<header class="header" id="header">
+    <nav class="nav container">
+        <a href="#" class="nav__logo">
+            Landchain <i class='bx bxs-home-alt-2'></i>
+        </a>
+        <div class="nav__menu">
+            <ul class="nav__list">
+                <li class="nav__item">
+                    <a href="/" class="nav__link active-link">
+                        <i class='bx bx-home-alt-2'></i>
+                        <span>Home</span>
+                    </a>
+                </li>
+                <li class="nav__item">
+                    <a href="/user" class="nav__link">
+                        <i class='bx bx-building-house' style='color:#000' ></i>
+                        <span>User</span>
+                    </a>
+                </li>
+                <li class="nav__item">
+                    <a href="/govtauth" class="nav__link">
+                    <i class='bx bxs-award' style='color:#000' ></i>
+                        <span>Govt Auth</span>
+                    </a>
+                </li>
+                <li class="nav__item">
+                    <a href="#contact" class="nav__link">
+                        <i class='bx bx-phone'></i>
+                        <span>Contacts</span>
+                    </a>
+                </li>
+            </ul>
         </div>
-        
-    </div>
-</nav>
+        <!-- Theme change Button -->
+        <i class='bx bx-moon change-theme'  id="theme-button"></i>
+
+        <a href="#" class="button nav__button">
+            Subscribe
+        </a>
+    </nav>
+</header>

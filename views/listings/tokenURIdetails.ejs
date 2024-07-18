@@ -1,0 +1,118 @@
+<% layout('./layouts/boilerplate') %>
+<body>
+    <div style="height: 110px;">  </div>
+    <section class="mt-3">
+        <div class="col-8 offset-1 mt-2 mb-2">
+            <h2>Set Token URI</h2>
+        </div>
+        <div class="col-6 offset-4 mt-2 ">
+            <div id="landDetailsSection" style="display: block;">
+                <p><b>Land Id:</b> <span id="landid"></span></p>
+                <form enctype="multipart/form-data" id="nftForm">
+                    <div class="form-group mt-3">
+                        <label for="landPicture"><b>Picture</b></label>
+                        <input type="file" class="form-control-file ml-3" id="landPicture" name="landPicture" required>
+                    </div>
+                    <div class="form-group mt-3">
+                        <label for="description"><b>Description</b></label>
+                        <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
+                    </div>
+                    <div class="form-group mt-3">
+                        <label for="price"><b>Price</b></label>
+                        <input type="text" class="form-control" id="price" name="price" required>
+                    </div>
+                    <button type="submit" class="btn btn-dark mt-4">Create Token URI</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <script src="https://unpkg.com/web3modal"></script>
+    <script src="https://unpkg.com/@walletconnect/web3-provider/dist/umd/index.min.js"></script>
+    <script src="https://cdn.ethers.io/lib/ethers-5.0.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
+    <script>
+        const db = Gun(['http://localhost:8765/gun'])
+
+        async function fetchLandDetails(landId) {
+            try {
+                await window.ethereum.request({ method: 'eth_requestAccounts' });
+                const provider = new ethers.providers.Web3Provider(window.ethereum);
+                const signer = provider.getSigner();
+                const contractABI = JSON.parse('<%- JSON.stringify(contractABI) %>');
+                const contractAddress = "0x2A609e6A814B61b1B0F99C4490CAccEf52ab1653"; // Your contract address
+                const contract = new ethers.Contract(contractAddress, contractABI, signer);
+
+                const lands = await contract.getLandDetails(landId);
+                document.getElementById('landid').innerText = landId;
+                const user = await contract.getMyDetails()
+                const hash=lands.landDetails
+                const name=user.name;
+                const address=user.accountAddress;
+                return {
+                    hash: hash,
+                    name: name,
+                    address: address
+                }
+            } catch (error) {
+                console.error('Error fetching land details:', error);
+                alert('Failed to fetch land details. Please try again.');
+            }
+        }
+
+        document.getElementById('nftForm').onsubmit = async function(event) {
+            event.preventDefault();
+            const urlParams = new URLSearchParams(window.location.search);
+            const landId = urlParams.get('landId');
+            const { hash, name, address } = await fetchLandDetails(landId);
+            const formData = new FormData();
+            const price = document.getElementById('price').value;
+            const description = document.getElementById('description').value;
+            const landPicture = document.getElementById('landPicture').files[0];
+            console.log(landPicture)
+            formData.append('landId', landId);
+            formData.append('name', name);
+            formData.append('price', price);
+            formData.append('description', description);
+            formData.append('file', landPicture);
+            formData.append('address', address);
+            try {
+                const response = await fetch('/setTokenUri', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to set token URI');
+                }
+
+                const tokenURI = await response.json();
+                console.log('Token URI:', tokenURI);
+                const landDetails = {
+                   tokenURI: tokenURI
+                }
+                db.get('userTokenURIs').get(hash).put(landDetails, (ack) => {
+                    if (ack.err) {
+                        console.error('Error storing data:', ack.err)
+                    } else {
+                        console.log('Data stored successfully')
+                    }
+                })
+                console.log("User Details Stored successfully! Hash: ", hash);
+                window.location.href = `/user`;
+            } catch (error) {
+                console.error('Error setting token URI:', error);
+                alert('Failed to set token URI. Please try again.');
+            }
+        };
+        const urlParams = new URLSearchParams(window.location.search);
+        const landId = urlParams.get('landId');
+        if(landId)
+        {
+            fetchLandDetails(landId);
+        }
+        else{
+            console.error('Land ID not found in URL parameters.');
+        }
+    </script>
+</body>

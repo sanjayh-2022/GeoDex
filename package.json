@@ -12,6 +12,7 @@
   "dependencies": {
     "@walletconnect/web3-provider": "^1.8.0",
     "alchemy-sdk": "^3.3.1",
+    "axios": "^1.7.2",
     "connect-flash": "^0.1.1",
     "connectkit": "^1.8.2",
     "crypto-js": "^4.2.0",
@@ -23,6 +24,7 @@
     "express": "^4.19.2",
     "gun": "^0.2020.1240",
     "method-override": "^3.0.0",
+    "multer": "^1.4.5-lts.1",
     "nodemailer": "^6.9.14",
     "nodemon": "^3.1.0",
     "path": "^0.12.7",

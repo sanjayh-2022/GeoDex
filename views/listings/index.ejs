@@ -1,117 +1,527 @@
-<% layout('./layouts/boilerplate') %>
+
+<%layout('./layouts/boilerplate')%>
 <body>
-  <section class="main py-5">
-    <div class="container py-5">
-      <div class="row py-5">
-        <div class="col-lg-6 py-5">
-          <p class="m-0 thchild1 pt-2 whtcolor">Real Estate On Chain</p>
-          <h1 style="font-size: 2rem;color: white;">Landchain</h1>
-          
-          <img src="https://res.cloudinary.com/dzbw89xnj/image/upload/v1715837680/home_drrxvz.png" alt="" class="homeimage">
-          <div class="line my-4 whtcolor"></div>
-          <p class="thchild2 whtcolor" style="font-weight: 500;">the NFT-based Land Record - Blockchain system</p>
-          <button class="mbtn1 mt-4 me-2">Read More</button>
-          <button class="mbtn2 mt-4">Cards</button>
+   <!--==================== MAIN ====================-->
+   <main class="main">
+    <!--==================== HOME ====================-->
+    <section class="home section" id="home">
+        <div class="home__container container grid">
+            <div class="home__data">
+                <h1 class="home__title">
+                    Real<br> Estate <br> Onchain
+                </h1>
+                <p class="home__description">
+                    the NFT-based Land Record - Blockchain system
+                </p>
+                    
+                   
+                 <button class="button w-50 mt-8"  id="connect-wallet-btn" style="margin-left: 0px; margin-bottom: 28px">Connect Wallet</button>
+                <div class="home__value">
+                   <div>
+                        <h1 class="home__value-number">9K <span>+</span></h1>
+                        <span class="home__value-description">Premium <br> Product</span>
+                   </div>
+
+                   <div>
+                        <h1 class="home__value-number">2K <span>+</span></h1>
+                        <span class="home__value-description">Happy <br> Customer</span>
+                    </div>
+
+                    <div>
+                        <h1 class="home__value-number">28K <span>+</span></h1>
+                        <span class="home__value-description">Awards <br> Winning</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="home__images">
+                <div class="home__orbe"></div>
+                    <div class="home__img">
+                        <img src="https://res.cloudinary.com/dzbw89xnj/image/upload/v1721323393/wanderlust_DEV/home_pqr8p4.jpg" alt="">
+                    </div>
+                
+            </div>
         </div>
-      </div>
-      <button class="mbtn2 w-50 mt-8" style="background-color: #f6851b; color: beige;" id="connect-wallet-btn">Connect Wallet</button>
-    </div>
-  </section>
+    </section>
 
-  <script src="https://cdn.ethers.io/lib/ethers-5.0.umd.min.js"></script>
-  <script src="https://unpkg.com/web3modal"></script>
-  <script src="https://unpkg.com/@walletconnect/web3-provider/dist/umd/index.min.js"></script>
-  <script>
-    async function connectWallet() {
-      try {
-        if (window.ethereum) {
-          await window.ethereum.request({ method: 'eth_requestAccounts' });
-          const provider = new ethers.providers.Web3Provider(window.ethereum);
-          console.log(typeof provider)
-          const signer = provider.getSigner();
-          const walletAddress = await signer.getAddress();
-          console.log(signer)
-          const updateButton = () => {
-            signer.getAddress().then(walletAddress => {
-              document.getElementById('connect-wallet-btn').innerText = 'Wallet Connected:  ' + formatAddress(walletAddress);
-            });
-          };
-
-          updateButton();
- 
-          window.ethereum.on("accountsChanged", () => {
+    <script src="https://cdn.ethers.io/lib/ethers-5.0.umd.min.js"></script>
+    <script src="https://unpkg.com/web3modal"></script>
+    <script src="https://unpkg.com/@walletconnect/web3-provider/dist/umd/index.min.js"></script>
+    <script>
+      async function connectWallet() {
+        try {
+          if (window.ethereum) {
+            await window.ethereum.request({ method: 'eth_requestAccounts' });
+            const provider = new ethers.providers.Web3Provider(window.ethereum);
+            console.log(typeof provider)
+            const signer = provider.getSigner();
+            const walletAddress = await signer.getAddress();
+            console.log(signer)
+            const updateButton = () => {
+              signer.getAddress().then(walletAddress => {
+                document.getElementById('connect-wallet-btn').innerText = 'Wallet Connected:  ' + formatAddress(walletAddress);
+              });
+            };
+  
             updateButton();
-          });
-
-          const response = await fetch('/connect-wallet', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ walletAddress})
-          });
-
-          const data = await response.json();
-        } else {
-          console.error('MetaMask or similar extension not detected');
+   
+            window.ethereum.on("accountsChanged", () => {
+              updateButton();
+            });
+  
+            const response = await fetch('/connect-wallet', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ walletAddress})
+            });
+  
+            const data = await response.json();
+          } else {
+            console.error('MetaMask or similar extension not detected');
+          }
+        } catch (error) {
+          console.error('Error connecting wallet:', error);
         }
-      } catch (error) {
-        console.error('Error connecting wallet:', error);
       }
-    }
-
-    function formatAddress(address) {
-      if (address.length <= 6) {
-        return address;
+  
+      function formatAddress(address) {
+        if (address.length <= 6) {
+          return address;
+        }
+        const start = address.substring(0, 6);
+        const end = address.substring(address.length - 4);
+        return `${start}...${end}`;
       }
-      const start = address.substring(0, 6);
-      const end = address.substring(address.length - 4);
-      return `${start}...${end}`;
-    }
-
-    document.getElementById('connect-wallet-btn').addEventListener('click', connectWallet);
-  </script>
-
-  <section style="overflow: hidden !important;position: relative;margin-top: 9rem;">
-    <h3 class="ms-5 mb-5" id="c1">Login as:</h3>
-    <div class="row row-cols-lg-3 ms-5">
-      <a href="#">
-        <div class="card mb-5">
-          <div class="img-wrapper">
-            <img src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8aG91c2UlMjBvd25lcnxlbnwwfHwwfHx8MA%3D%3D" alt="...">
-          </div>
-          <div class="card-body">
-            <h5 class="card-title head1" style="font-weight: 600;">Owner</h5>
-            <form action="/connectowner" method="GET">
-              <button class="btn btn-dark indexloginbutton">Login</button>
-            </form>
-          </div>
+  
+      document.getElementById('connect-wallet-btn').addEventListener('click', connectWallet);
+    </script>
+  
+   <!--==================== LOGOS ====================-->
+   <section class="logos section">
+    <div class="logos__container container grid">
+        <div class="logos__img">
+            <img src="https://res.cloudinary.com/dzbw89xnj/image/upload/v1721323392/wanderlust_DEV/logo1_lhvh5s.png" alt="">
         </div>
-      </a>
-      <a href="#">
-        <div class="card">
-          <div class="img-wrapper">
-            <img src="https://images.unsplash.com/photo-1521790797524-b2497295b8a0?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8YnV5ZXJ8ZW58MHx8MHx8fDA%3D" alt="...">
-          </div>
-          <div class="card-body">
-            <h5 class="card-title head1" style="font-weight: 600;">Buyer</h5>
-            <form action="/connectbuyer" method="GET">
-              <button class="btn btn-dark indexloginbutton">Login</button>
-            </form>
-          </div>
+        <div class="logos__img">
+            <img src="https://res.cloudinary.com/dzbw89xnj/image/upload/v1721323392/wanderlust_DEV/logo2_jrfeqg.png" alt="">
         </div>
-      </a>
-      <a href="#">
-        <div class="card">
-          <div class="img-wrapper">
-            <img src="https://media.istockphoto.com/id/1874174342/photo/a-woman-signing-a-real-estate-contract.webp?b=1&s=170667a&w=0&k=20&c=80vgjUJ8xl-vNqjnJJy4jRC28b6CtEseSnS4VHTwLrw=" alt="...">
-          </div>
-          <div class="card-body">
-            <h5 class="card-title head1" style="font-weight: 600;margin-top: -1px;">Govt Auth</h5>
-            <form action="/connectgovtauth" method="GET">
-              <button class="btn btn-dark indexloginbutton">Login</button>
-            </form>
-          </div>
+        <div class="logos__img">
+            <img src="https://res.cloudinary.com/dzbw89xnj/image/upload/v1721323392/wanderlust_DEV/logo3_ngrkur.png" alt="">
         </div>
-      </a>
+        <div class="logos__img">
+            <img src="https://res.cloudinary.com/dzbw89xnj/image/upload/v1721323393/wanderlust_DEV/logo4_gkc0y2.png" alt="">
+        </div>
     </div>
-  </section>
+</section>
+
+<!--==================== POPULAR ====================-->
+<section class="" id="">
+    <div class="container">
+        <span class="section__subtitle"></span>
+        <h2 class="section__tilte" style="margin-bottom: 5px;">
+            Login as:<span></span>
+        </h2>
+
+        <div class="logins" >
+            
+                <article class=" "  style="width: 366px;">
+                    <img src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8aG91c2UlMjBvd25lcnxlbnwwfHwwfHx8MA%3D%3D" alt="" class="popular__img">
+
+                    <div class="popular__data">
+                        
+                        <h3 class="popular__title">
+                            Owner
+                        </h3>
+                        <form action="/connectowner" method="GET">
+                        <button class="popular__description button">
+                            Login
+                        </button>
+                    </form>
+                    </div>
+                </article>
+                
+
+           
+                    <article class="" style="width: 407px;">
+                        <img src="https://images.unsplash.com/photo-1521790797524-b2497295b8a0?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8YnV5ZXJ8ZW58MHx8MHx8fDA%3D" alt="" class="popular__img">
+
+                        <div class="popular__data">
+                            
+                            <h3 class="popular__title">
+                                Buyer
+                            </h3>
+                            <form action="/connectowner" method="GET">
+                            <button class="popular__description button">
+                                Login
+                            </button>
+                            </form>
+                        </div>
+                    </article> 
+                   
+
+                
+                        <article class="" style="width: 407px;">
+                            <img src="https://media.istockphoto.com/id/1874174342/photo/a-woman-signing-a-real-estate-contract.webp?b=1&s=170667a&w=0&k=20&c=80vgjUJ8xl-vNqjnJJy4jRC28b6CtEseSnS4VHTwLrw=" alt="" class="popular__img">
+
+                            <div class="popular__data">
+                                
+                                <h3 class="popular__title">
+                                   Govt Auth
+                                </h3>
+                                <form action="/connectowner" method="GET">
+                                <button class="popular__description button">
+                                    Login
+                                </button>
+                                </form>
+                            </div>
+                        </article>
+                   
+                </div>
+                       
+            </div>
+            </section>
+
+
+
+
+
+
+
+
+<section class="popular section" id="popular">
+    <div class="container">
+        <span class="section__subtitle">Best Choice</span>
+        <h2 class="section__tilte">
+            Popular Residences<span>.</span>
+        </h2>
+
+        <div class="popular__container swiper">
+            <div class="swiper-wrapper">
+                <article class="popular_card swiper-slide ">
+                    <img src="https://res.cloudinary.com/dzbw89xnj/image/upload/v1721323393/wanderlust_DEV/popular1_fjtjsj.jpg" alt="" class="popular__img">
+
+                    <div class="popular__data">
+                        <h2 class="popular__price">
+                            <span>$</span>66,356
+                        </h2>
+                        <h3 class="popular__title">
+                            Garden City Assat
+                        </h3>
+                        <p class="popular__description">
+                            Street The Garden City Of Miraflores, 
+                            Lima - Perú Av. Sol #9876
+                        </p>
+                    </div>
+                </article>
+                
+                <article class="popular_card swiper-slide ">
+                    <img src="https://res.cloudinary.com/dzbw89xnj/image/upload/v1721323394/wanderlust_DEV/popular2_bwfwai.jpg" alt="" class="popular__img">
+
+                    <div class="popular__data">
+                        <h2 class="popular__price">
+                            <span>$</span>35,159
+                        </h2>
+                        <h3 class="popular__title">
+                            Gables Luxurious House
+                        </h3>
+                        <p class="popular__description">
+                            Street The Garden City Of Miraflores, 
+                            Lima - Perú Av. Sol #9876
+                        </p>
+                    </div>
+                </article>
+
+                <article class="popular_card swiper-slide">
+                    <img src="https://res.cloudinary.com/dzbw89xnj/image/upload/v1721323393/wanderlust_DEV/popular3_fh1wyk.jpg" alt="" class="popular__img">
+
+                    <div class="popular__data">
+                        <h2 class="popular__price">
+                            <span>$</span>75,043
+                        </h2>
+                        <h3 class="popular__title">
+                            Garden Orchard City
+                        </h3>
+                        <p class="popular__description">
+                            Street The Garden City Of Miraflores, 
+                            Lima - Perú Av. Sol #9876
+                        </p>
+                    </div>
+                </article>
+
+                <article class="popular_card swiper-slide">
+                    <img src="https://res.cloudinary.com/dzbw89xnj/image/upload/v1721323392/wanderlust_DEV/popular4_b6mvil.jpg" alt="" class="popular__img">
+
+                    <div class="popular__data">
+                        <h2 class="popular__price">
+                            <span>$</span>62,024
+                        </h2>
+                        <h3 class="popular__title">
+                            Luxurious City Garden
+                        </h3>
+                        <p class="popular__description">
+                            Street The Garden City Of Miraflores, 
+                            Lima - Perú Av. Sol #9876
+                        </p>
+                    </div>
+                </article>
+
+                <article class="popular_card swiper-slide">
+                    <img src="https://res.cloudinary.com/dzbw89xnj/image/upload/v1721323395/wanderlust_DEV/popular5_ivlslp.jpg" alt="" class="popular__img">
+
+                    <div class="popular__data">
+                        <h2 class="popular__price">
+                            <span>$</span>47,043
+                        </h2>
+                        <h3 class="popular__title">
+                            Aliva Private Garden
+                        </h3>
+                        <p class="popular__description">
+                            Street The Garden City Of Miraflores, 
+                            Lima - Perú Av. Sol #9876
+                        </p>
+                    </div>
+                </article>
+            </div>
+
+            <div class="swiper-button-prev">
+                <i class='bx bx-chevron-left'></i>
+            </div>
+            <div class="swiper-button-next">
+                <i class='bx bx-chevron-right'></i>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!--==================== VALUE ====================-->
+<section class="value section" id="value">
+    <div class="value__container container grid">
+        <div class="values__images">
+            <div class="value__orbe">
+
+                <div class="value__img">
+                    <img src="https://res.cloudinary.com/dzbw89xnj/image/upload/v1721323394/wanderlust_DEV/value_pm4swr.jpg" alt="">
+                </div>
+            </div>
+        </div>
+
+        <div class="value__content">
+            <div class="value__data">
+                <span class="section__subtitle">Our Value</span>
+                <h2 class="section__title">
+                    Value We Give To You<span>.</span>
+                </h2>
+                <p class="value__description">
+                   
+                </p>
+            </div>
+
+            <div class="value__accordion">
+                  <div class="value__accordion-item">
+                     <header class="value__accordion-header">
+                        <i class='bx bxs-shield-x value__accordation-icon'  ></i>
+                        <h3 class="value__accordion-title">
+                            Best interest rates on the market
+                        </h3>
+                        <div class="value__accordion-arrow">
+                            <i class='bx bxs-down-arrow value__accordation-icon' ></i>
+                        </div>
+                     </header>
+
+                     <div class="value__accordion-content">
+                        <p class="value__accordion-description">
+                            Price we provides is the best for you, 
+                            we guarantee no price changes on your property due 
+                            to various unexpected costs that may come.
+                        </p>
+                     </div>
+                  </div>
+
+                  <div class="value__accordion-item">
+                    <header class="value__accordion-header">
+                       <i class='bx bxs-shield-x'  ></i>
+                       <h3 class="value__accordion-title">
+                            Prevent unstable prices
+                       </h3>
+                       <div class="value__accordion-arrow">
+                           <i class='bx bxs-down-arrow value__accordation-icon' ></i>
+                       </div>
+                    </header>
+
+                    <div class="value__accordion-content">
+                       <p class="value__accordion-description">
+                           Price we provides is the best for you, 
+                           we guarantee no price changes on your property due 
+                           to various unexpected costs that may come.
+                       </p>
+                    </div>
+                 </div>
+
+                 <div class="value__accordion-item">
+                    <header class="value__accordion-header">
+                       <i class='bx bxs-shield-x value__accordation-icon'  ></i>
+                       <h3 class="value__accordion-title">
+                           Best prices on the market 
+                       </h3>
+                       <div class="value__accordion-arrow">
+                           <i class='bx bxs-down-arrow' ></i>
+                       </div>
+                    </header>
+
+                    <div class="value__accordion-content">
+                       <p class="value__accordion-description">
+                           Price we provides is the best for you, 
+                           we guarantee no price changes on your property due 
+                           to various unexpected costs that may come.
+                       </p>
+                    </div>
+                 </div>
+
+                 <div class="value__accordion-item">
+                    <header class="value__accordion-header">
+                       <i class='bx bxs-shield-x value__accordation-icon'  ></i>
+                       <h3 class="value__accordion-title">
+                           Security of your data
+                       </h3>
+                       <div class="value__accordion-arrow">
+                           <i class='bx bxs-down-arrow' ></i>
+                       </div>
+                    </header>
+
+                    <div class="value__accordion-content">
+                       <p class="value__accordion-description">
+                           Price we provides is the best for you, 
+                           we guarantee no price changes on your property due 
+                           to various unexpected costs that may come.
+                       </p>
+                    </div>
+                 </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!--==================== CONTACT ====================-->
+<section class="contact section" id="contact">
+    <div class="contact__container container grid">
+        <div class="contact__images">
+            <div class="contact__orbe"></div>
+
+            <div class="contact__img">
+                <img src="https://res.cloudinary.com/dzbw89xnj/image/upload/v1721323393/wanderlust_DEV/contact_skldph.png" alt="">
+            </div>
+        </div>
+
+        <div class="contact__content">
+            <div class="contact__data">
+                <span class="section__subtitle">Contact Us</span>
+                <h2 class="section__title">
+                    Easy to Contact us<span>.</span>
+                </h2>
+                <p class="contact__description">
+                    Is there a problem finding your dream home? Need a 
+                    guide in buying first home? or need a consultation 
+                    on residential issues? just contact us.
+                </p>
+            </div>
+
+            <div class="contact__card">
+                
+                <div class="contact__card-box">
+                    <div class="contact__card-info">
+                        <i class='bx bxs-phone-call' ></i>
+                        <div>
+                            <h3 class="contact__card-title">
+                                 Call
+                            </h3>
+                            <p class="contact__card-decription">
+                                022.321.165.19
+                            </p>
+                        </div>
+                    </div>
+
+                    <button class="button contact__card-button">
+                         Call now
+                    </button>
+                </div>
+
+                <div class="contact__card-box">
+                    <div class="contact__card-info">
+                        <i class='bx bx-message-rounded'></i>
+                        <div>
+                            <h3 class="contact__card-title">
+                                 Chat
+                            </h3>
+                            <p class="contact__card-decription">
+                                022.321.165.19
+                            </p>
+                        </div>
+                    </div>
+
+                    <button class="button contact__card-button">
+                          Chat now
+                    </button>
+                </div>
+
+                <div class="contact__card-box">
+                    <div class="contact__card-info">
+                        <i class='bx bxs-video' ></i>
+                        <div>
+                            <h3 class="contact__card-title">
+                                 Video call
+                            </h3>
+                            <p class="contact__card-decription">
+                                022.321.165.19
+                            </p>
+                        </div>
+                    </div>
+
+                    <button class="button contact__card-button">
+                          Video call now
+                    </button>
+                </div>
+
+                <div class="contact__card-box">
+                    <div class="contact__card-info">
+                        <i class='bx bxs-envelope' ></i>
+                        <div>
+                            <h3 class="contact__card-title">
+                                 Email
+                            </h3>
+                            <p class="contact__card-decription">
+                                022.321.165.19
+                            </p>
+                        </div>
+                    </div>
+
+                    <button class="button contact__card-button">
+                            Email now
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!--==================== SUBSCRIBE ====================-->
+<section class="subscribe section">
+    <div class="subscribe__container container">
+        <h1 class="subscribe__title">
+            Get started with Landchain
+        </h1>
+        <p class="subscribe__description">
+            Subscribe and find super attractive price
+            quotes from us, Find your residence soon
+        </p>
+        <a href="" class="button subscribe__button">
+            Get Started
+        </a>
+    </div>
+</section>
+</main>
+
+<!--========== SCROLL UP ==========-->
+<a href="#" class="scrollup" id="scroll-up">
+  <i class='bx bxs-chevrons-up' ></i>
+ </a>
 </body>

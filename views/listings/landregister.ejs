@@ -5,11 +5,54 @@
     }
 </style>
 <body>
-    <div class="row mt-3" style="overflow: hidden !important;">
+    <div style="height: 110px;">  </div>
+    <div class="col-8 offset-1 mt-2 mb-2">
+        <h2>Set Token URI</h2>
+    </div>
+    <div class="col-6 offset-4 mt-2 ">
+        <div id="landDetailsSection" style="display: block;">
+            <form enctype="multipart/form-data" id="nftForm">
+                <div class="form-group mt-3">
+                    <label for="landPicture"><b>Picture</b></label>
+                    <input type="file" class="form-control-file ml-3" id="landPicture" name="landPicture" required>
+                </div>
+                <div class="form-group mt-3">
+                    <label for="description"><b>Description</b></label>
+                    <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
+                </div>
+                <div class="form-group mt-3">
+                    <label for="price"><b>Price</b></label>
+                    <input type="text" class="form-control" id="price" name="price" required>
+                </div>
+                <button type="submit" class="btn btn-dark mt-4">Create Token URI</button>
+            </form>
+            <div class="mt-2">
+                <label for="exampleFormControlTextarea1" class="form-label">The Token URI:</label>
+                <input type="text" name="tokenuri" class="form-control" id="tokenuri" required disabled>
+            </div>
+        </div>
+    </div>
+    <div class="row mt-4" style="overflow: hidden !important;">
         <h2 class="col-6 offset-1 mb-4">Land Registration Details:</h2>
         <div class="col-6 offset-3">
-            <form action="/gotownerdetails" method="POST"  class="needs-validation" novalidate style="overflow: hidden !important;">
-            <div class="mb-3">
+            <form enctype="multipart/form-data" id="documentUploadForm">
+                <div class="row mt-3" style="overflow: hidden !important;">
+                    <label for="password" class="form-label">Upload Document: </label>
+                    <div class="input-group">
+                        <input type="file" class="form-control" id="fileInput" name="fileInput" required>
+                        <button type="submit" class="btn btn-dark ml-2 btn-sm">Upload</button>
+                        <div class="invalid-feedback">
+                            Please choose a file to upload
+                        </div>
+                    </div>
+                </div>
+            </form>
+            <div class="mt-2">
+                <label for="exampleFormControlTextarea1" class="form-label">The Uploaded file URL:</label>
+                <input type="text" name="fileUrl" class="form-control" id="fileUrl" required disabled>
+            </div>
+            <form class="needs-validation" novalidate style="overflow: hidden !important;" id="registerForm">
+            <div class="mb-3 mt-3">
                 <label for="unitid" class="form-label">Property ID</label>
                 <input type="text" name="pid" placeholder="enter Property Id" class="form-control" id="pid" required>
                 <div class="invalid-feedback">
@@ -44,25 +87,8 @@
                     Enter the Land price
                 </div>
             </div>
-            <form action="/uploadDocument" method="POST" enctype="multipart/form-data" id="documentUploadForm">
-                <div class="row mt-3" style="overflow: hidden !important;">
-                    <label for="password" class="form-label">Upload Document: </label>
-                        <div class="input-group">
-                            <input type="file" class="form-control" id="fileInput" name="fileInput" required>
-                            <button type="submit" class="btn btn-dark ml-2 btn-sm">Upload</button>
-                            <div class="invalid-feedback">
-                                Please choose a file to upload
-                            </div>
-                    </div>
-                </div>
-            </form>
-            <div class="mb-1">
-                <label for="exampleFormControlTextarea1" class="form-label">The Uploaded file URL:</label>
-                <textarea class="form-control" id="fileurl" rows="3" name="fileurl"></textarea>
-            </div>
-
-              <button class="btn btn-dark mt-5">Register</button>
-            </form>
+            <button class="btn btn-dark mt-3" type="submit">Register</button>
+          </form>
         </div>
 
     <script src="https://unpkg.com/web3modal"></script>
@@ -70,16 +96,17 @@
     <script src="https://cdn.ethers.io/lib/ethers-5.0.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
-
+    
     <script>
         let provider;
         let signer;
         let contract;
-
+        let tokenURI;
+    
         const contractABI = JSON.parse('<%- JSON.stringify(contractABI) %>');
         const contractAddress = "0x2A609e6A814B61b1B0F99C4490CAccEf52ab1653"; // Your contract address
-        const db = Gun(['http://localhost:8765/gun'])
-
+        const db = Gun(['http://localhost:8765/gun']);
+    
         async function initialize() {
             if (typeof window.ethereum !== 'undefined') {
                 try {
@@ -88,13 +115,12 @@
                     signer = provider.getSigner();
                     contract = new ethers.Contract(contractAddress, contractABI, signer);
                     const address = await signer.getAddress();
-                    document.getElementById('walletAddress').value = address;
                     console.log('Contract initialized', address);
-
+    
                 } catch (error) {
                     console.error('Error initializing contract:', error);
                 }
-
+    
                 window.ethereum.on('accountsChanged', async (accounts) => {
                     const address = accounts[0];
                     document.getElementById('walletAddress').value = address;
@@ -105,9 +131,10 @@
                 alert('MetaMask is not installed. Please install MetaMask and try again.');
             }
         }
-
+    
         async function uploadFileToIPFS(formData) {
             try {
+                console.log(formData)
                 const response = await fetch('/uploadDocument', {
                     method: 'POST',
                     body: formData,
@@ -123,25 +150,72 @@
                 throw error; // Propagate error for handling elsewhere
             }
         }
-        
-
-        document.getElementById('documentUploadForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const form = e.target;
-            const formData = new FormData(form);
-        
+    
+        document.getElementById('documentUploadForm').onsubmit = async (e) => {
+            e.preventDefault();    
+            const fileInput = document.getElementById('fileInput').files[0]; // Get the file input
+            console.log(fileInput)
+            const formData = new FormData();
+            formData.append('file', fileInput); 
             try {
                 const ipfsHash = await uploadFileToIPFS(formData);
-                document.getElementById('documentIpfsHash').value = ipfsHash; // Store IPFS hash in a hidden input
+                document.getElementById('fileUrl').value = `https://gateway.pinata.cloud/ipfs/${ipfsHash}`; // Store IPFS hash in a hidden input
                 console.log('File uploaded to IPFS. IPFS Hash:', ipfsHash);
             } catch (error) {
                 console.error('Error uploading document:', error);
                 alert('Failed to upload document.');
             }
-        });
-        
+        };
 
+        async function fetchUserDetails() {
+            try {
+                await window.ethereum.request({ method: 'eth_requestAccounts' });
+                const provider = new ethers.providers.Web3Provider(window.ethereum);
+                const signer = provider.getSigner();
+                const contractABI = JSON.parse('<%- JSON.stringify(contractABI) %>');
+                const contractAddress = "0x2A609e6A814B61b1B0F99C4490CAccEf52ab1653"; // Your contract address
+                const contract = new ethers.Contract(contractAddress, contractABI, signer);
+                const user = await contract.getMyDetails()
+                const name=user.name;
+                return (name)
+            } catch (error) {
+                console.error('Error fetching land details:', error);
+                alert('Failed to fetch land details. Please try again.');
+            }
+        }
+
+        document.getElementById('nftForm').onsubmit = async function(event) {
+            event.preventDefault();
+            const formData = new FormData();
+            const price = document.getElementById('price').value;
+            const description = document.getElementById('description').value;
+            const landPicture = document.getElementById('landPicture').files[0];
+            const name=await fetchUserDetails();
+            console.log(name)
+            console.log(landPicture)
+            formData.append('name', name);
+            formData.append('price', price);
+            formData.append('description', description);
+            formData.append('file', landPicture);
+            try {
+                const response = await fetch('/setTokenUri', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to set token URI');
+                }
+
+                const tokenUri = await response.json();
+                console.log('Token URI:', tokenUri);
+                document.getElementById('tokenuri').value = tokenUri.jsonPinataLink;
+            } catch (error) {
+                console.error('Error setting token URI:', error);
+                alert('Failed to set token URI. Please try again.');
+            }
+        };
+    
         document.getElementById('registerForm').onsubmit = async (e) => {
             e.preventDefault();
             if (contract) {
@@ -150,21 +224,23 @@
                 const landPrice = document.getElementById('landprice').value;
                 const propertyID = document.getElementById('pid').value;
                 const surveyNo = document.getElementById('sno').value;
-                const fileUrl = document.getElementById('fileurl').value;
+                const fileUrl = document.getElementById('fileUrl').value;
+                const NFT_token_uri=document.getElementById('tokenuri').value; // Assuming you use fileUrl input for storing IPFS hash
                 const landDetails = {
                     propertyID: propertyID,
                     surveyNo: surveyNo,
-                    fileUrl: fileUrl
-                };
+                    fileUrl: fileUrl,
+                    NFT_token_uri: NFT_token_uri,
+                }; 
                 const userDetailsString = JSON.stringify(landDetails);
                 const userHash = CryptoJS.SHA256(userDetailsString).toString();
-                db.get('userDetails').get(userHash).put(userDetails, (ack) => {
+                db.get('userDetails').get(userHash).put(landDetails, (ack) => {
                     if (ack.err) {
-                      console.error('Error storing data:', ack.err)
+                        console.error('Error storing data:', ack.err)
                     } else {
-                      console.log('Data stored successfully')
+                        console.log('Data stored successfully')
                     }
-                  })
+                })
                 console.log("User Details Stored successfully! Hash: ", userHash);
                 try {
                     const landDetails = userHash; // Assuming landDetails should be userHash
@@ -175,7 +251,6 @@
                     const tx = await contract.registerLand(landDetails, area, landAddress, landPrice);
                     console.log('Transaction hash:', tx.hash);
                     
-
                     const receipt = await tx.wait();
                     console.log('Transaction confirmed:', receipt);
                     const topics = receipt.logs[0].topics;
@@ -198,7 +273,7 @@
                     })
                     .then(response => {
                         if (response.ok) {
-                            window.location.href = '/user'; 
+                            window.location.href = '/user';
                         } else {
                             throw new Error('Failed to send landId');
                         }
@@ -217,4 +292,5 @@
         };
         window.addEventListener('load', initialize);
     </script>
+        
 </body>

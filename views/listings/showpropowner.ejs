@@ -1,24 +1,169 @@
-<%layout('./layouts/boilerplate')%>
+<% layout('./layouts/boilerplate') %>
 <body>
-    <section class=" mt-3">
-            <div class="col-8 offset-1 mt-2 mb-2">
-               <h2>Land Details:</h2>
+    <div style="height: 110px;"></div>
+    <section class="mt-3 mb-8">
+        <div class="col-8 offset-1 mt-2 mb-2">
+            <h2>Land Details:</h2>
+        </div>
+        <div class="col-6 offset-4 mt-2 show-card">
+            <img src="https://media.istockphoto.com/id/909423306/photo/modern-multilevel-house-exterior-with-pool.webp?b=1&s=170667a&w=0&k=20&c=lVkUVRVlGBio7oMSYkx_tQuydlhJnBkpnVSuBBHtRMM="
+                class="card-img-top show-image" alt="show-image">
+            <div class="showcard-body">
+                <p class="card-text"><b>Land Id: </b><span id="landid"></span></p>
+                <p class="card-text"><b>Area: </b><span id="area"></span></p>
+                <p class="card-text"><b>Land Address: </b><span id="landAddress"></span></p>
+                <p class="card-text"><b>Price: </b><span id="landPrice"></span></p>
             </div>
-            <div class=" col-6 offset-4 mt-2 show-card">
-                <img src="https://media.istockphoto.com/id/909423306/photo/modern-multilevel-house-exterior-with-pool.webp?b=1&s=170667a&w=0&k=20&c=lVkUVRVlGBio7oMSYkx_tQuydlhJnBkpnVSuBBHtRMM=" class="card-img-top show-image" alt="show-image">
-                <div class="showcard-body ">
-                    <p class="card-text">Owned by <i>Owner Name</i></p>
-                    <p class="card-text"><b>unit area: </b> <%= landDetails[0].area %></p>
-                    <p class="card-text"><b>land address: </b> <%= landDetails[0].address %> </p>
-                    <p class="card-text"><b>Price: </b><%= landDetails[0].landPrice %></p>
-                    <p class="card-text"><b>Property id: </b><%= landDetails[0].propertyid %> </p>
-                    <p class="card-text"><b>Document No: </b><%= landDetails[0].document %></p>  
-                    <form method="GET" action="/addtosale/<%= landDetails[0].idland %>" style="display: contents;">
-                        <button class="btn btn-dark deletebutton mb-5">Sale</button>
-                    </form> 
-                </div>
-            </div>   
+            <button id="saleBtn" class="button btn-dark mt-3">List Land for Sale</button>
+        </div>
+        <div style="height: 200px;"></div>
     </section>
-    
-   
+
+    <section class="mt-3 mb-8">
+        <div style="height: 200px;"></div>
+        <div class="col-8 offset-1 mt-2 mb-2">
+            <h2>Buy Requests:</h2>
+        </div>
+        <div class="col-10 offset-1 mt-2 mb-2">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Buyer Address</th>
+                        <th>Buyer Name</th>
+                        <th>Buyer Phone</th>
+                        <th>Buyer Email</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="buyerDetailsTable">
+                    <!-- Buyer details will be appended here -->
+                </tbody>
+            </table>
+        </div>
+        <div id="proofSection" style="display:none; margin-left:160px">
+        <form enctype="multipart/form-data" id="proofForm" >
+            <input type="file" id="proofFile" />
+            <button id="submitProofBtn" type="submit" class="button btn-dark mt-3">Submit Proof</button>
+        </form>
+        </div>
+        <div style="height: 200px;"></div>
+    </section>
+
+    <script src="https://unpkg.com/web3modal"></script>
+    <script src="https://unpkg.com/@walletconnect/web3-provider/dist/umd/index.min.js"></script>
+    <script src="https://cdn.ethers.io/lib/ethers-5.0.umd.min.js"></script>
+    <script>
+        const contractABI = JSON.parse('<%- JSON.stringify(contractABI) %>');
+        const contractAddress = "0x2A609e6A814B61b1B0F99C4490CAccEf52ab1653"; // Your contract address
+
+        async function fetchLandDetails(landId) {
+            try {
+                await window.ethereum.request({ method: 'eth_requestAccounts' });
+                const provider = new ethers.providers.Web3Provider(window.ethereum);
+                const signer = provider.getSigner();
+                const contract = new ethers.Contract(contractAddress, contractABI, signer);
+                const landDetails = await contract.getLandDetails(landId);
+                console.log('Land Details:', landDetails);
+                document.getElementById('landid').innerText = landId;
+                document.getElementById('area').innerText = landDetails.area;
+                document.getElementById('landAddress').innerText = landDetails.landAddress;
+                document.getElementById('landPrice').innerText = landDetails.landPrice;
+                const saleButton = document.getElementById('saleBtn');
+                saleButton.addEventListener('click', () => listLandForSale(contract, landId, landDetails.landPrice));
+                fetchBuyerDetails(contract, landId); // Fetch buyer details after fetching land details
+            } catch (error) {
+                console.error('Error fetching land details:', error);
+            }
+        }
+
+        async function listLandForSale(contract, landId, landPrice) {
+            try {
+                // Call smart contract function to list land for sale
+                const tx = await contract.listLandForSale(landId, landPrice);
+                const receipt = await tx.wait();
+                console.log('Transaction confirmed:', receipt);
+                console.log(`Land with ID ${landId} listed for sale.`);
+                const saleButton = document.getElementById('saleBtn');
+                saleButton.innerText = 'Land listed for sale';
+                saleButton.disabled = true;
+            } catch (error) {
+                console.error('Error listing land for sale:', error);
+                alert("Land Not Verified By Govt, wait for the verification")
+            }
+        }
+
+        async function fetchBuyerDetails(contract, landId) {
+            try {
+                const buyerDetailsTable = document.getElementById('buyerDetailsTable');
+                const buyer = await contract.getBuyerDetails(landId);
+                console.log(buyer);
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${buyer.accountAddress}</td>
+                    <td>${buyer.name}</td>
+                    <td>${buyer.phoneNumber}</td>
+                    <td>${buyer.email}</td>
+                    <td><button class="button btn-dark approveBtn">Approve</button></td>
+                `;
+                buyerDetailsTable.appendChild(row);
+
+                const approveButtons = document.getElementsByClassName('approveBtn');
+                Array.from(approveButtons).forEach((button, index) => {
+                    button.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        document.getElementById('proofSection').style.display = 'block';
+                        document.getElementById('proofForm').onSubmit = async (e) => {
+                            e.preventDefault();
+                            document.getElementById('submitProofBtn').addEventListener('click', function(event) {
+                                event.preventDefault();
+                            });
+                            const fileInput = document.getElementById('proofFile');
+                            const file = fileInput.files[0];
+                            const formData = new FormData();
+                            formData.append('file', file);
+                     
+                            try {
+                                const response = await fetch('/uploadDocument', {
+                                    method: 'POST',
+                                    body: formData
+                                });
+                                const result = await response.json();
+                                const hash = result.ipfsHash;
+                                console.log(hash)
+                                const proofURL=`https://gateway.pinata.cloud/ipfs/${hash}`
+                                approveSaleByOwner(contract, landId, proofURL);
+                            } catch (error) {
+                                console.error('Error uploading proof:', error);
+                            }
+                        };
+                    });
+                });
+                console.log('Buyer Details:', buyer);
+            } catch (error) {
+                console.log('No buyers found for the given land ID.', error);
+            }
+        }
+
+        async function approveSaleByOwner(contract, landId, proofURL) {
+            try {
+                const tx = await contract.approveSaleByOwner(landId, proofURL);
+                const receipt = await tx.wait();
+                console.log('Sale approved:', receipt);
+                alert('Sale approved successfully!');
+            } catch (error) {
+                console.error('Error approving sale:', error);
+            }
+        }
+
+        // Extract landId from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const landId = urlParams.get('landId');
+
+        if (landId) {
+            fetchLandDetails(landId);
+        } else {
+            console.error('Land ID not found in URL parameters.');
+        }
+    </script>
 </body>
+</html>

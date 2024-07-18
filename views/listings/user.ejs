@@ -1,8 +1,9 @@
 <% layout('./layouts/boilerplate') %>
 <body>
+    <div style="height: 110px;">  </div>
     <h2>User Details</h2>
     <div id="userDetails">
-        <p>User ID: <%= userId %></p>
+        <p>User ID: <span id="userId"></span></p>
         <p>Address: <span id="userAddress"></span></p>
         <p>Name: <span id="userName"></span></p>
         <p>Aadhar No: <span id="userAadhar"></span></p>
@@ -12,12 +13,25 @@
         <p>Verified: <span id="userVerified"></span></p>
     </div>
     <button id="registerLandButton" class="btn btn-dark mt-3" disabled>Register a Land</button>
+
+    <h2>Owned Lands</h2>
+    <div id="ownedLands" class="row">
+        <!-- Land cards will be dynamically inserted here -->
+    </div>
+
+    <h2>Available Lands for Sale</h2>
+    <div id="availableLands" class="row">
+        <!-- Available land cards will be dynamically inserted here -->
+    </div>
+
     <script src="https://unpkg.com/web3modal"></script>
     <script src="https://unpkg.com/@walletconnect/web3-provider/dist/umd/index.min.js"></script>
     <script src="https://cdn.ethers.io/lib/ethers-5.0.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
     <script>
-        const userId = "<%= userId %>";
+        const urlParams = new URLSearchParams(window.location.search);
+        const userId = urlParams.get('userIdInt');
+        document.getElementById('userId').innerText = userId;
         const contractABI = JSON.parse('<%- JSON.stringify(contractABI) %>');
         const contractAddress = "0x2A609e6A814B61b1B0F99C4490CAccEf52ab1653"; // Your contract address
         const db = Gun(['http://localhost:8765/gun'])
@@ -61,10 +75,109 @@
                 } else {
                     document.getElementById('registerLandButton').disabled = true;
                 }
+
+                getOwnedLands() 
             } catch (error) {
                 console.error('Error fetching user details:', error);
             }
         }
+
+        async function getOwnedLands() {
+            const provider = new ethers.providers.Web3Provider(window.ethereum);
+            const signer = provider.getSigner();
+            const contract = new ethers.Contract(contractAddress, contractABI, signer);
+
+            try {
+                const landIds = await contract.getLandIds();
+                console.log('Land IDs:', landIds);
+
+                for (let i = 0; i < landIds.length; i++) {
+                    const landId = parseInt(landIds[i], 16);
+
+                    try {
+                        const landDetails = await contract.getLandDetails(landId);
+                        console.log(`Details for Land ID ${landId}:`, landDetails);
+
+                        const ownedLandsContainer = document.getElementById('ownedLands');
+                        const card = document.createElement('div');
+                        card.className = 'card col-lg-4 mb-3';
+                        card.innerHTML = `
+                            <div class="card-body">
+                                <h5 class="card-title">Land ID: ${landId}</h5>
+                                <p class="card-text">Land Address: ${landDetails.landAddress}</p>
+                                <p class="card-text">Land Price: ${landDetails.landPrice}</p>
+                                 <p class="card-text">Land Area: ${landDetails.area}</p>
+                                <p class="card-text">Verified: ${landDetails.isLandVerified ? 'Yes' : 'Not Yet'}</p>
+                            </div>
+                        `;
+                        card.addEventListener('click', () => {
+                            window.location.href = `/landowned?landId=${landId}`;
+                        });
+                        ownedLandsContainer.appendChild(card);
+                    } catch (error) {
+                        continue;
+                    }
+                }
+
+                getAvailableLandsForSale()
+            } catch (error) {
+                console.error('Error fetching land IDs:', error);
+            }
+        }
+
+        async function getAvailableLandsForSale() {
+            const provider = new ethers.providers.Web3Provider(window.ethereum);
+            const signer = provider.getSigner();
+            const contract = new ethers.Contract(contractAddress, contractABI, signer);
+        
+            // Fetch current user's details to compare ownership
+            const currentUser = await contract.getMyDetails();
+            const currentUserName = currentUser.name;
+            console.log('Current User:', currentUser);
+        
+            try {
+                const landIds = await contract.getLandIds();
+                console.log('Land IDs:', landIds);
+        
+                for (let i = 0; i < landIds.length; i++) {
+                    const landId = parseInt(landIds[i], 16);
+        
+                    try {
+                        const landDetails = await contract.getLandDetailsUser(landId);
+                        if (landDetails.ownerName === currentUserName) {
+                            // Skip if the current user is the owner
+                            continue;
+                        }
+                        console.log(`Details for Land ID ${landId}:`, landDetails);
+        
+                        const availableLandsContainer = document.getElementById('availableLands');
+                        const card = document.createElement('div');
+                        card.className = 'card col-lg-4 mb-3';
+                        card.innerHTML = `
+                            <div class="card-body">
+                                <h5 class="card-title">Land ID: ${landId}</h5>
+                                <p class="card-text">Land Area: ${landDetails.area}</p>
+                                <p class="card-text">Land Address: ${landDetails.landAddress}</p>
+                                <p class="card-text">Land Price: ${landDetails.landPrice}</p>
+                                <p class="card-text">Owner Name: ${landDetails.ownerName}</p>
+                                <p class="card-text">Owner Phone: ${landDetails.ownerPhoneNumber}</p>
+                                <p class="card-text">Owner Email: ${landDetails.ownerEmail}</p>
+                            </div>
+                        `;
+                        card.addEventListener('click', () => {
+                            window.location.href = `/land?landId=${landId}`;
+                        });
+                        availableLandsContainer.appendChild(card);
+                    } catch (error) {
+                        // Ignore the error and move to the next land ID
+                        continue;
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching land IDs:', error);
+            }
+        }
+        
         getUserDetails();
     </script>
 </body>

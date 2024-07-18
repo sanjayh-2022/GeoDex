@@ -1,5 +1,6 @@
 <%layout('./layouts/boilerplate')%>
 <body>
+    <div style="height: 110px;">  </div>
     <section class="mainbuyer py-5" >
         <div class="container py-5">
             <span class="usercircle">
@@ -15,13 +16,19 @@
                     <thead>
                         <tr>
                             <th scope="col">Land id</th>
+                            <th scope="col">Property ID</th>
+                            <th scope="col">Land Survey No</th>
                             <th scope="col">Land address</th>
-                            <th scope="col">Land survey No</th>
+                            <th scope="col">Land area</th>
                             <th scope="col">Land Price</th>
-                            <th scope="col">Land Docu</th>
+                            <th scope="col">Land Document URL</th>
+                            <th scope="col">Land owner ID</th>
                             <th scope="col">Approve</th>
                         </tr>
                     </thead>
+                    <tbody id="landRegistrationBody">
+                        <!-- Dynamic content will be inserted here -->
+                    </tbody>
                 </table>
             </section>
         </div>
@@ -71,9 +78,10 @@
     <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
     <script>
         const contractABI = JSON.parse('<%- JSON.stringify(contractABI) %>');
+        const contractABI2 = JSON.parse('<%- JSON.stringify(contractABI2) %>');
         const contractAddress = "0x2A609e6A814B61b1B0F99C4490CAccEf52ab1653"; // Your contract address
         const db = Gun(['http://localhost:8765/gun'])
-
+        
         async function getUserDetails() {
             await window.ethereum.request({ method: 'eth_requestAccounts' });
             const provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -154,6 +162,127 @@
                 approveUser(userId); 
             }
         });
+
+        async function getLandDetails() {
+            await window.ethereum.request({ method: 'eth_requestAccounts' });
+            const provider = new ethers.providers.Web3Provider(window.ethereum);
+            const signer = provider.getSigner();
+            const address = await signer.getAddress();
+            const contract = new ethers.Contract(contractAddress, contractABI, signer);
+        
+            try {
+                const lands = await contract.getRegisteredLandIds();
+                console.log(lands);
+                const landIdsLength = lands.length;
+                const landIds = lands.map(land => parseInt(land, 16));
+                console.log('Land IDs Length:', landIdsLength);
+                console.log('Land IDs:', landIds);
+        
+                for (let i = 0; i < landIdsLength; i++) {
+                    const landId = landIds[i];
+                    const lands = await contract.getLandDetails(landId);
+                    console.log(`Details for Land ID ${landId}:`, lands);
+        
+                    if (!lands.isLandVerified) {
+                        const hash=lands.landDetails;
+                        db.get('userDetails').get(hash).once((data) => {
+                            if (data) {
+                                ({ propertyID, surveyNo, fileUrl } = data);
+                                console.log('Property ID:', propertyID);
+                                console.log('Survey No:', surveyNo);
+                                console.log('File URL:', fileUrl);
+                                const tableBody = document.getElementById('landRegistrationBody');
+                                const row = document.createElement('tr');
+                                row.innerHTML = `
+                                    <td>${landId}</td>
+                                    <td>${propertyID}</td>
+                                    <td>${surveyNo}</td>
+                                    <td>${lands.landAddress}</td>
+                                    <td>${lands.landPrice}</td>
+                                    <td>${fileUrl}</td>
+                                    <td>${lands.ownerId}</td>
+                                    <td>
+                                        <button class="btn btn-dark approve-land-button" data-userid="${landId}">
+                                                <i class="bi bi-check"></i> Approve
+                                        </button>
+                                    </td>
+                                `;
+                                tableBody.appendChild(row);
+                                    } else {
+                                        console.log('No user details found for the given hash.');
+                                    }
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching land details:', error);
+            }
+        }
+        
+        async function approveLand(landId) {
+            try {
+                await window.ethereum.request({ method: 'eth_requestAccounts' });
+                const provider = new ethers.providers.Web3Provider(window.ethereum);
+                const contractAddress2='0x7E258885ff140E1cBBFba3aA37712055C9422a89'
+                const signer = provider.getSigner();
+                const contract = new ethers.Contract(contractAddress, contractABI, signer);             
+                const lands= await contract.getLandDetails(landId);
+                ownerId=lands.ownerId;
+                const hash=lands.landDetails;
+                const ownerDetails= await contract.getUserDetails(ownerId);
+                const ownerAddress=ownerDetails.accountAddress;
+                const tx = await contract.verifyLand(landId);
+                const receipt = await tx.wait(); 
+                console.log(`Land with ID ${landId} verified successfully.`);
+                console.log('Transaction Receipt:', receipt); 
+                db.get('userDetails').get(hash).once((data) => {
+                    if (data) {
+                        const { NFT_token_uri } = data;
+                        console.log('Token URI', NFT_token_uri);
+                        //mintNFTWithTokenURI(landId, ownerAddress, NFT_token_uri);
+                    } else {
+                        console.log('No user details found for the given hash.');
+                    }
+                });
+                getLandDetails();
+            } catch (error) {
+                console.error('Error approving land:', error);
+            }
+        }
+        async function mintNFTWithTokenURI(landId, ownerAddress, NFT_token_uri) {
+            try {
+                await window.ethereum.request({ method: 'eth_requestAccounts' });
+                const provider = new ethers.providers.Web3Provider(window.ethereum);
+                const signer = provider.getSigner();
+                const contractAddress2 = '0x7E258885ff140E1cBBFba3aA37712055C9422a89';
+                const contract2 = new ethers.Contract(contractAddress2, contractABI2, signer);
+                const tokenURI=NFT_token_uri
+                const tx = await contract2.mintNFT( ownerAddress, landId, tokenURI);
+                const receipt = await tx.wait(); 
+                console.log(`NFT minted successfully for land ID ${landId}.`);
+                console.log('Transaction Receipt:', receipt);
+                getLandDetails();
+            } catch (error) {
+                console.error('Error minting NFT:', error);
+            }
+        }
+        
+        getLandDetails();
+        
+        document.addEventListener('click', function(event) {
+            if (event.target.classList.contains('approve-land-button')) {
+                const row = event.target.closest('tr');
+                if (row) {
+                    const landIdCell = row.querySelector('td:first-child'); // Assuming landId is the first column
+                    if (landIdCell) {
+                        const landId = landIdCell.textContent.trim();
+                        console.log('Land ID:', landId);
+                        approveLand(landId); 
+                    }
+                }
+            }
+        });
+        
     
     </script>
 </body>

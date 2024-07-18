@@ -1,45 +1,127 @@
-<%layout('./layouts/boilerplate')%>
+<% layout('./layouts/boilerplate') %>
 <style>
-    body{
+    body {
         overflow-x: hidden;
     }
 </style>
 <body>
     <div class="row mt-3" style="overflow: hidden !important;">
-        <h2 class="col-6 offset-1 mb-4">Government Authority Details:</h2>
+        <h2 class="col-6 offset-1 mb-4">Govt Authority details:</h2>
         <div class="col-6 offset-3">
-            <form action="/gotgovtauth" method="POST"  class="needs-validation" novalidate style="overflow: hidden !important;">
-            <div class="mb-3">
-                <label for="password" class="form-label">Name</label>
-                <input type="text" name="username" placeholder="enter your name" class="form-control" id="password" required>
-                <div class="invalid-feedback">
-                    Enter a valid Name
+            <form id="registerForm" class="needs-validation" novalidate style="overflow: hidden !important;">
+                <div class="mb-3">
+                    <label for="aadharNo" class="form-label">Govt Id:</label>
+                    <input type="text" name="govtId" placeholder="Enter your Govt Id:" class="form-control" id="govtId" required>
+                    <div class="invalid-feedback">
+                        Enter your Govt ID.
+                    </div>
                 </div>
-            </div>
-            <div class="mb-3">
-                <label for="password" class="form-label">Age</label>
-                <input type="number" name="age" placeholder="enter age" class="form-control" id="password" required>
-                <div class="invalid-feedback">
-                    Enter a valid age
+                <div class="mb-3">
+                    <label for="name" class="form-label">Name</label>
+                    <input type="text" name="name" placeholder="Enter your name" class="form-control" id="name" required>
+                    <div class="invalid-feedback">
+                        Enter your Name
+                    </div>
                 </div>
-            </div>
-            <div class="mb-3">
-                <label for="password" class="form-label">Designation</label>
-                <input type="text" name="designation" placeholder="enter Designation" class="form-control" id="password" required>
-                <div class="invalid-feedback">
-                    Enter a valid Designation
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email Id</label>
+                    <input type="email" name="email" placeholder="Enter your email" class="form-control" id="email" required>
+                    <div class="invalid-feedback">
+                        Enter your govt email id
+                    </div>
                 </div>
-            </div>
-            <div class="mb-3">
-                <label for="password" class="form-label">City</label>
-                <input type="text" name="city" placeholder="enter city" class="form-control" id="password" required>
-                <div class="invalid-feedback">
-                    Enter a valid city
+                <div class="mb-3">
+                    <label for="walletAddress" class="form-label">Your Wallet Address: </label>
+                    <input type="text" class="form-control" id="walletAddress" disabled>
                 </div>
-            </div>
-            
-            <button class="btn btn-dark">Register</button>
+                <button class="btn btn-dark">Register</button>
             </form>
         </div>
-        </div>
+    </div>
+
+    <script src="https://unpkg.com/web3modal"></script>
+    <script src="https://unpkg.com/@walletconnect/web3-provider/dist/umd/index.min.js"></script>
+    <script src="https://cdn.ethers.io/lib/ethers-5.0.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
+
+    <script>
+        let provider;
+        let signer;
+        let contract;
+
+        const contractABI = JSON.parse('<%- JSON.stringify(contractABI) %>');
+        const contractAddress = "0x2A609e6A814B61b1B0F99C4490CAccEf52ab1653"; // Your contract address
+
+        async function initialize() {
+            if (typeof window.ethereum !== 'undefined') {
+                try {
+                    await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    provider = new ethers.providers.Web3Provider(window.ethereum);
+                    signer = provider.getSigner();
+                    contract = new ethers.Contract(contractAddress, contractABI, signer);
+                    const address = await signer.getAddress();
+                    document.getElementById('walletAddress').value = address;
+                    console.log('Contract initialized', address);
+
+                } catch (error) {
+                    console.error('Error initializing contract:', error);
+                }
+
+                window.ethereum.on('accountsChanged', async (accounts) => {
+                    const address = accounts[0];
+                    document.getElementById('walletAddress').value = address;
+                    signer = provider.getSigner(address);
+                    contract = new ethers.Contract(contractAddress, contractABI, signer);
+                });
+            } else {
+                alert('MetaMask is not installed. Please install MetaMask and try again.');
+            }
+        }
+
+        document.getElementById('registerForm').onsubmit = async (e) => {
+            e.preventDefault();
+            if (contract) {
+                const name = document.getElementById('name').value;
+                const govtId = document.getElementById('govtId').value;
+                const email = document.getElementById('email').value;
+                try {
+                    const tx = await contract.registerGovtAuthority(govtId, name, email);
+                    console.log('Transaction hash:', tx.hash);
+                    const receipt = await tx.wait();
+                    console.log('Transaction confirmed:', receipt);
+
+                    fetch('/registerGovtAuth', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            txHash: tx.hash,
+                            txReceipt: receipt
+                        }),
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Registration of Govt Authority successful!');
+                        } else {
+                            alert('Registration failed.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error sending transaction data to server:', error);
+                        alert('Failed to register user.');
+                    });
+                } catch (error) {
+                    console.error('Error registering user:', error);
+                    alert('Failed to register user.');
+                }
+            } else {
+                alert('Contract is not initialized');
+            }
+        };
+
+        window.addEventListener('load', initialize);
+    </script>
 </body>

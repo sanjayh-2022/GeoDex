@@ -1,0 +1,220 @@
+<%layout('./layouts/boilerplate')%>
+<style>
+    body{
+        overflow-x: hidden;
+    }
+</style>
+<body>
+    <div class="row mt-3" style="overflow: hidden !important;">
+        <h2 class="col-6 offset-1 mb-4">Land Registration Details:</h2>
+        <div class="col-6 offset-3">
+            <form action="/gotownerdetails" method="POST"  class="needs-validation" novalidate style="overflow: hidden !important;">
+            <div class="mb-3">
+                <label for="unitid" class="form-label">Property ID</label>
+                <input type="text" name="pid" placeholder="enter Property Id" class="form-control" id="pid" required>
+                <div class="invalid-feedback">
+                    Enter the Property Id
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="unitid" class="form-label">Survey No:</label>
+                <input type="text" name="sno" placeholder="enter Survey No:" class="form-control" id="sno" required>
+                <div class="invalid-feedback">
+                    Enter the Survey No
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">Area</label>
+                <input type="number" name="area" placeholder="enter Area (in sqft)" class="form-control" id="area" required>
+                <div class="invalid-feedback">
+                    Enter a the area(in sqft)
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="exampleFormControlTextarea1" class="form-label">Land Address</label>
+                <textarea class="form-control" id="landaddress" rows="3" name="landaddress"></textarea>
+                <div class="invalid-feedback">
+                    Enter a the land Address:
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">Land Price</label>
+                <input type="number" name="landprice" placeholder="enter price" class="form-control" id="landprice" required>
+                <div class="invalid-feedback">
+                    Enter the Land price
+                </div>
+            </div>
+            <form action="/uploadDocument" method="POST" enctype="multipart/form-data" id="documentUploadForm">
+                <div class="row mt-3" style="overflow: hidden !important;">
+                    <label for="password" class="form-label">Upload Document: </label>
+                        <div class="input-group">
+                            <input type="file" class="form-control" id="fileInput" name="fileInput" required>
+                            <button type="submit" class="btn btn-dark ml-2 btn-sm">Upload</button>
+                            <div class="invalid-feedback">
+                                Please choose a file to upload
+                            </div>
+                    </div>
+                </div>
+            </form>
+            <div class="mb-1">
+                <label for="exampleFormControlTextarea1" class="form-label">The Uploaded file URL:</label>
+                <textarea class="form-control" id="fileurl" rows="3" name="fileurl"></textarea>
+            </div>
+
+              <button class="btn btn-dark mt-5">Register</button>
+            </form>
+        </div>
+
+    <script src="https://unpkg.com/web3modal"></script>
+    <script src="https://unpkg.com/@walletconnect/web3-provider/dist/umd/index.min.js"></script>
+    <script src="https://cdn.ethers.io/lib/ethers-5.0.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
+
+    <script>
+        let provider;
+        let signer;
+        let contract;
+
+        const contractABI = JSON.parse('<%- JSON.stringify(contractABI) %>');
+        const contractAddress = "0x2A609e6A814B61b1B0F99C4490CAccEf52ab1653"; // Your contract address
+        const db = Gun(['http://localhost:8765/gun'])
+
+        async function initialize() {
+            if (typeof window.ethereum !== 'undefined') {
+                try {
+                    await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    provider = new ethers.providers.Web3Provider(window.ethereum);
+                    signer = provider.getSigner();
+                    contract = new ethers.Contract(contractAddress, contractABI, signer);
+                    const address = await signer.getAddress();
+                    document.getElementById('walletAddress').value = address;
+                    console.log('Contract initialized', address);
+
+                } catch (error) {
+                    console.error('Error initializing contract:', error);
+                }
+
+                window.ethereum.on('accountsChanged', async (accounts) => {
+                    const address = accounts[0];
+                    document.getElementById('walletAddress').value = address;
+                    signer = provider.getSigner(address);
+                    contract = new ethers.Contract(contractAddress, contractABI, signer);
+                });
+            } else {
+                alert('MetaMask is not installed. Please install MetaMask and try again.');
+            }
+        }
+
+        async function uploadFileToIPFS(formData) {
+            try {
+                const response = await fetch('/uploadDocument', {
+                    method: 'POST',
+                    body: formData,
+                });
+                if (!response.ok) {
+                    throw new Error('Failed to upload document');
+                }
+                const data = await response.json();
+                const ipfsHash = data.ipfsHash; // Assuming your server returns ipfsHash
+                return ipfsHash;
+            } catch (error) {
+                console.error('Error uploading document:', error);
+                throw error; // Propagate error for handling elsewhere
+            }
+        }
+        
+
+        document.getElementById('documentUploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const form = e.target;
+            const formData = new FormData(form);
+        
+            try {
+                const ipfsHash = await uploadFileToIPFS(formData);
+                document.getElementById('documentIpfsHash').value = ipfsHash; // Store IPFS hash in a hidden input
+                console.log('File uploaded to IPFS. IPFS Hash:', ipfsHash);
+            } catch (error) {
+                console.error('Error uploading document:', error);
+                alert('Failed to upload document.');
+            }
+        });
+        
+
+        document.getElementById('registerForm').onsubmit = async (e) => {
+            e.preventDefault();
+            if (contract) {
+                const area = document.getElementById('area').value;
+                const landAddress = document.getElementById('landaddress').value;
+                const landPrice = document.getElementById('landprice').value;
+                const propertyID = document.getElementById('pid').value;
+                const surveyNo = document.getElementById('sno').value;
+                const fileUrl = document.getElementById('fileurl').value;
+                const landDetails = {
+                    propertyID: propertyID,
+                    surveyNo: surveyNo,
+                    fileUrl: fileUrl
+                };
+                const userDetailsString = JSON.stringify(landDetails);
+                const userHash = CryptoJS.SHA256(userDetailsString).toString();
+                db.get('userDetails').get(userHash).put(userDetails, (ack) => {
+                    if (ack.err) {
+                      console.error('Error storing data:', ack.err)
+                    } else {
+                      console.log('Data stored successfully')
+                    }
+                  })
+                console.log("User Details Stored successfully! Hash: ", userHash);
+                try {
+                    const landDetails = userHash; // Assuming landDetails should be userHash
+                    const user = await contract.getMyDetails();
+                    const name = user.name;
+                    const email = user.email;
+                    const phoneNumber = user.phoneNumber;
+                    const tx = await contract.registerLand(landDetails, area, landAddress, landPrice);
+                    console.log('Transaction hash:', tx.hash);
+                    
+
+                    const receipt = await tx.wait();
+                    console.log('Transaction confirmed:', receipt);
+                    const topics = receipt.logs[0].topics;
+                    console.log(topics)
+                    const LandIdHex = topics[1].substring(2)
+                    const landId = parseInt(LandIdHex, 16)
+                    console.log('Land ID (Integer):', landId)
+        
+                    fetch('/sendLandId', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            landId: landId,
+                            name: name,
+                            email: email,
+                            phoneNumber: phoneNumber
+                        }),
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            window.location.href = '/user'; 
+                        } else {
+                            throw new Error('Failed to send landId');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error sending landId:', error);
+                        alert('Failed to send landId.');
+                    });
+                } catch (error) {
+                    console.error('Error registering user:', error);
+                    alert('Failed to register user.');
+                }
+            } else {
+                alert('Contract is not initialized');
+            }
+        };
+        window.addEventListener('load', initialize);
+    </script>
+</body>

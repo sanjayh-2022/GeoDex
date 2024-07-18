@@ -1,0 +1,63 @@
+<%layout('./layouts/boilerplate')%>
+<body>
+    <button id="connectButton">Connect Wallet</button>
+    <form id="registerForm">
+        <input type="text" id="name" placeholder="Name" required />
+        <input type="text" id="aadharNo" placeholder="Aadhar Number" required />
+        <input type="text" id="panNo" placeholder="PAN Number" required />
+        <input type="text" id="phoneNumber" placeholder="Phone Number" required />
+        <input type="email" id="email" placeholder="Email" required />
+        <button type="submit">Register User</button>
+    </form>
+    <script src="https://unpkg.com/web3modal"></script>
+    <script src="https://unpkg.com/@walletconnect/web3-provider/dist/umd/index.min.js"></script>
+    <script src="https://cdn.ethers.io/lib/ethers-5.0.umd.min.js"></script>
+    <script>
+        let provider;
+        let signer;
+        let contract;
+
+        const contractABI = JSON.parse('<%- JSON.stringify(contractABI) %>')
+        const contractAddress = "0x7d5C1Bfe80dc5bCfd5157a7A14868c87FCFF134B"; // Your contract address will be injected here
+
+        document.getElementById('connectButton').onclick = async () => {
+            if (typeof window.ethereum !== 'undefined') {
+                try {
+                    await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    provider = new ethers.providers.Web3Provider(window.ethereum);
+                    signer = provider.getSigner();
+                    console.log(signer)
+                    contract = new ethers.Contract(contractAddress, contractABI, signer);
+                    console.log('Wallet connected');
+                } catch (error) {
+                    console.error('Error connecting to MetaMask', error);
+                }
+            } else {
+                alert('MetaMask is not installed. Please install MetaMask and try again.');
+            }
+        };
+
+        document.getElementById('registerForm').onsubmit = async (e) => {
+            e.preventDefault();
+            if (contract) {
+                const name = document.getElementById('name').value;
+                const aadharNo = document.getElementById('aadharNo').value;
+                const panNo = document.getElementById('panNo').value;
+                const phoneNumber = document.getElementById('phoneNumber').value;
+                const email = document.getElementById('email').value;
+
+                try {
+                    const tx = await contract.registerUser(name, aadharNo, panNo, phoneNumber, email);
+                    console.log('Transaction hash:', tx.hash);
+                    const receipt = await tx.wait();
+                    console.log('Transaction confirmed:', receipt);
+                } catch (error) {
+                    console.error('Error registering user:', error);
+                }
+            } else {
+                alert('Contract is not initialized');
+            }
+        };
+    </script>
+</body>
+</html>

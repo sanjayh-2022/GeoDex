@@ -5,7 +5,7 @@
     }
 </style>
 <body>
-    <div style="height: 110px;">  </div>
+    <div style="height: 200px;">  </div>
     <div class="row mt-3" style="overflow: hidden !important;">
         <h2 class="col-6 offset-1 mb-4">User Details:</h2>
         <div class="col-6 offset-3">
@@ -75,8 +75,13 @@
                     await window.ethereum.request({ method: 'eth_requestAccounts' });
                     provider = new ethers.providers.Web3Provider(window.ethereum);
                     signer = provider.getSigner();
-                    contract = new ethers.Contract(contractAddress, contractABI, signer);
                     const address = await signer.getAddress();
+                    const storedAddress = sessionStorage.getItem('walletAddress');
+                    const storedUserType = sessionStorage.getItem('userType');
+                    if (storedAddress === address && storedUserType === 'user') {
+                        window.location.href = '/user';
+                    }
+                    contract = new ethers.Contract(contractAddress, contractABI, signer);
                     document.getElementById('walletAddress').value = address;
                     console.log('Contract initialized', address);
 
@@ -103,6 +108,8 @@
                 const panNo = document.getElementById('panNo').value;
                 const phoneNumber = document.getElementById('phoneNumber').value;
                 const email = document.getElementById('email').value;
+                sessionStorage.setItem('walletAddress', walletAddress);
+                sessionStorage.setItem('userType', 'user');
                 const userDetails = {
                     aadharNo: aadharNo,
                     panNo: panNo

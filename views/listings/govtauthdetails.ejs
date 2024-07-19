@@ -3,12 +3,26 @@
     body {
         overflow-x: hidden;
     }
+    .input-group {
+        position: relative;
+    }
+    .status-message {
+        color: green;
+        font-weight: bold;
+        display: none;
+    }
+    .error-message {
+        color: red;
+        font-weight: bold;
+        display: none;
+    }
 </style>
 <body>
-    <div style="height: 110px;">  </div>
+    <div style="height: 110px;"></div>
     <div class="row mt-3" style="overflow: hidden !important;">
         <h2 class="col-6 offset-1 mb-4">Govt Authority details:</h2>
         <div class="col-6 offset-3">
+            <!-- Registration Form -->
             <form id="registerForm" class="needs-validation" novalidate style="overflow: hidden !important;">
                 <div class="mb-3">
                     <label for="aadharNo" class="form-label">Govt Id:</label>
@@ -35,7 +49,24 @@
                     <label for="walletAddress" class="form-label">Your Wallet Address: </label>
                     <input type="text" class="form-control" id="walletAddress" disabled>
                 </div>
-                <button class="btn btn-dark">Register</button>
+                <button type="button" class="btn btn-dark" id="sendOtpButton">Send OTP</button>
+                <button type="submit" class="btn btn-dark" id="registerButton" style="display: none;" disabled>Register</button>
+                <div id="otpStatus" class="status-message">OTP Verified!</div>
+                <div id="otpError" class="error-message">OTP verification failed. Please try again.</div>
+            </form>
+
+            <!-- OTP Verification Form -->
+            <form id="otpForm" style="display: none; margin-top: 20px;">
+                <div class="mb-3">
+                    <label for="otp" class="form-label">OTP</label>
+                    <input type="text" name="otp" placeholder="Enter OTP sent to your email" class="form-control" id="otp">
+                    <div class="invalid-feedback">
+                        Enter the OTP
+                    </div>
+                </div>
+                <button type="button" class="btn btn-dark" id="verifyOtpButton">Verify OTP</button>
+                <div id="otpVerifyStatus" class="status-message">OTP Verified!</div>
+                <div id="otpVerifyError" class="error-message">Invalid OTP or OTP expired</div>
             </form>
         </div>
     </div>
@@ -50,6 +81,8 @@
         let provider;
         let signer;
         let contract;
+        let walletAddress;
+        let otpVerified = false;
 
         const contractABI = JSON.parse('<%- JSON.stringify(contractABI) %>');
         const contractAddress = "0x2A609e6A814B61b1B0F99C4490CAccEf52ab1653"; // Your contract address
@@ -60,8 +93,14 @@
                     await window.ethereum.request({ method: 'eth_requestAccounts' });
                     provider = new ethers.providers.Web3Provider(window.ethereum);
                     signer = provider.getSigner();
-                    contract = new ethers.Contract(contractAddress, contractABI, signer);
                     const address = await signer.getAddress();
+                    walletAddress = address;
+                    const storedAddress = sessionStorage.getItem('walletAddress');
+                    const storedUserType = sessionStorage.getItem('userType');
+                    if (storedAddress === address && storedUserType === 'govt') {
+                        window.location.href = '/govt';
+                    }
+                    contract = new ethers.Contract(contractAddress, contractABI, signer);
                     document.getElementById('walletAddress').value = address;
                     console.log('Contract initialized', address);
 
@@ -80,40 +119,83 @@
             }
         }
 
+        document.getElementById('sendOtpButton').addEventListener('click', async () => {
+            const email = document.getElementById('email').value;
+           // if (!email.endsWith('.gov.in')) {
+           //     alert('Only .gov.in emails are allowed');
+           //     return;
+           // }
+
+            fetch('/request-otp', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email }),
+            })
+            .then(response => response.text())
+            .then(text => {
+                alert(text);
+                document.getElementById('otpForm').style.display = 'block'; // Show OTP form
+                document.getElementById('verifyOtpButton').style.display = 'block'; // Show Verify OTP button
+            })
+            .catch(error => {
+                console.error('Error sending OTP request:', error);
+                alert('Failed to send OTP.');
+            });
+        });
+
+        document.getElementById('verifyOtpButton').addEventListener('click', async () => {
+            const email = document.getElementById('email').value;
+            const otp = document.getElementById('otp').value;
+
+            fetch('/verify-otp', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email, otp }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    otpVerified = true;
+                    document.getElementById('otpVerifyStatus').style.display = 'block';
+                    document.getElementById('otpVerifyStatus').style.color = 'green';
+                    document.getElementById('otpVerifyStatus').textContent = 'OTP Verified!';
+                    document.getElementById('registerButton').disabled = false;
+                    document.getElementById('sendOtpButton').style.display = 'none'; // Hide Verify OTP button
+                    document.getElementById('registerButton').style.display = 'block'; // Enable Register button
+                } else {
+                    document.getElementById('otpVerifyError').style.display = 'block';
+                }
+            })
+            .catch(error => {
+                console.error('Error verifying OTP:', error);
+                document.getElementById('otpVerifyError').style.display = 'block';
+            });
+        });
+
         document.getElementById('registerForm').onsubmit = async (e) => {
             e.preventDefault();
+            sessionStorage.setItem('userType', 'govt');
+            sessionStorage.setItem('walletAddress', walletAddress);
+            if (!otpVerified) {
+                alert('Please verify the OTP before proceeding.');
+                return;
+            }
             if (contract) {
                 const name = document.getElementById('name').value;
                 const govtId = document.getElementById('govtId').value;
                 const email = document.getElementById('email').value;
+
                 try {
                     const tx = await contract.registerGovtAuthority(govtId, name, email);
                     console.log('Transaction hash:', tx.hash);
                     const receipt = await tx.wait();
                     console.log('Transaction confirmed:', receipt);
-
-                    fetch('/registerGovtAuth', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            txHash: tx.hash,
-                            txReceipt: receipt
-                        }),
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            alert('Registration of Govt Authority successful!');
-                        } else {
-                            alert('Registration failed.');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error sending transaction data to server:', error);
-                        alert('Failed to register user.');
-                    });
+                    alert('Govt Auth Registration successful!');
+                    window.location.href = `/govt`;
                 } catch (error) {
                     console.error('Error registering user:', error);
                     alert('Failed to register user.');

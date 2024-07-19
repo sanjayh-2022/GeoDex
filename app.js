@@ -9,11 +9,24 @@ const multer = require('multer')
 const ejsmate = require('ejs-mate')
 const methodOverride = require('method-override')
 const dotenv = require('dotenv')
+const cryptoJS = require('crypto-js')
 
 dotenv.config()
 
 const app = express()
 const port = 8080
+
+const otpStore = {}
+
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  port: 587,
+  auth: {
+    user: 'landchain.gov@gmail.com',
+    pass: process.env.NODE_MAILER_PASS,
+  },
+  tls: { rejectUnauthorized: false },
+})
 
 app.set('view engine', 'ejs')
 app.set('views', path.join(__dirname, '/views'))
@@ -32,10 +45,6 @@ const contractABI2 = JSON.parse(abiJSON2)
 const contractAddress = process.env.CONTRACT_ADDRESS
 const JWT = process.env.PINATA_JWT_KEY
 
-const provider = new ethers.providers.JsonRpcProvider(
-  `https://eth-sepolia.g.alchemy.com/v2/${process.env.API_KEY}`
-)
-
 const uploadsDir = path.join(__dirname, 'uploads')
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir)
@@ -50,20 +59,21 @@ app.listen(port, () => {
   console.log(`Listening on port ${port}`)
 })
 
-app.get('/dummy', (req, res) => {
-  res.render('listings/dummy.ejs', { contractABI })
-})
+function sendOTPEmail(email, otp) {
+  const mailOptions = {
+    from: 'your-email@gmail.com',
+    to: email,
+    subject: 'Your OTP Code',
+    text: `Your OTP code is ${otp}`,
+  }
+
+  return transporter.sendMail(mailOptions)
+}
 
 app.post('/connect-wallet', async (req, res) => {
   try {
     const { walletAddress: address } = req.body
     walletAddress = address
-    signer = provider.getSigner(walletAddress)
-    provider
-      .getBlockNumber()
-      .then((blockNumber) =>
-        console.log(`Current block number: ${blockNumber}`)
-      )
     res.json({ message: 'Wallet connected successfully!' })
   } catch (error) {
     console.error('Error connecting wallet:', error)
@@ -81,6 +91,37 @@ const ensureWalletAddress = async (req, res, next) => {
     console.error('Error ensuring wallet address:', error)
     res.status(500).json({ error: 'Internal Server Error' })
   }
+}
+
+app.post('/request-otp', (req, res) => {
+  const { email } = req.body
+  const otp = generateRandomOtp()
+  const otpHash = cryptoJS.SHA256(otp).toString()
+  otpStore[email] = otpHash
+  console.log(`Generated OTP for ${email}: ${otp}`)
+
+  sendOTPEmail(email, otp)
+  res.send(`OTP sent to ${email}`)
+})
+
+// Endpoint to verify OTP
+app.post('/verify-otp', (req, res) => {
+  const { email, otp } = req.body
+  const otpHash = otpStore[email]
+  if (otpHash && otpHash === cryptoJS.SHA256(otp).toString()) {
+    delete otpStore[email] // Remove OTP after successful verification
+    res.json({ success: true })
+  } else {
+    res.json({ success: false })
+  }
+})
+
+// Function to generate a 6-digit OTP
+function generateRandomOtp(length = 6) {
+  const min = Math.pow(10, length - 1)
+  const max = Math.pow(10, length) - 1
+  const otp = Math.floor(Math.random() * (max - min + 1)) + min
+  return otp.toString()
 }
 
 app.post('/uploadDocument', upload.single('file'), async (req, res) => {
@@ -132,16 +173,6 @@ app.get('/registerLand', (req, res) => {
 app.post('/sendLandId', (req, res) => {
   const { landId, name, email, phoneNumber } = req.body
 
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    port: 587,
-    auth: {
-      user: 'landchain.gov@gmail.com',
-      pass: 'qhlj kjko zgbe cxyk',
-    },
-    tls: { rejectUnauthorized: false },
-  })
-
   const mailOptions = {
     from: 'landchain.gov@gmail.com',
     to: email,
@@ -192,18 +223,6 @@ app.get('/user', (req, res) => {
 
 app.get('/govtauth', (req, res) => {
   res.render('listings/govtauthdetails.ejs', { contractABI })
-})
-
-app.post('/registerGovtAuth', async (req, res) => {
-  try {
-    const txReceipt = req.body.txReceipt
-    console.log('Transaction Receipt:', txReceipt)
-
-    res.redirect(`/govt`)
-  } catch (error) {
-    console.error('Error processing transaction receipt:', error)
-    res.status(500).send('Error processing transaction receipt')
-  }
 })
 
 app.get('/govt', (req, res) => {
@@ -320,148 +339,5 @@ app.post('/gotownerdetails', ensureWalletAddress, async (req, res) => {
   } catch (error) {
     console.error('Error adding land:', error)
     res.status(500).send('Failed to add land.')
-  }
-})
-
-app.get('/owner', ensureWalletAddress, async (req, res) => {
-  try {
-    const landDetailsArray = []
-    const receivedRequests = []
-    const landSaleArray = []
-    const contract = new ethers.Contract(contractAddress, contractABI, signer)
-
-    const landIds = await contract.ReturnAllLandList()
-    for (let i = 0; i < landIds.length; i++) {
-      const landId = landIds[i]
-      const landDetails = await contract.lands(landId)
-      const id = landDetails.id.toNumber()
-      const area = landDetails.area.toNumber()
-      const landPrice = landDetails.landPrice.toNumber()
-      const landObject = {
-        id,
-        area,
-        landAddress: landDetails.landAddress,
-        landPrice,
-      }
-      if (landDetails.isforSell) {
-        landSaleArray.push(landObject)
-      }
-      landDetailsArray.push(landObject)
-    }
-
-    const receivedRequestIds = await contract.myReceivedLandRequests()
-    for (let i = 0; i < receivedRequestIds.length; i++) {
-      const requestId = receivedRequestIds[i]
-      const request = await contract.LandRequestMapping(requestId)
-      const landDetails = await contract.lands(request.landId)
-      const id = requestId.toNumber()
-      const landId = request.landId.toNumber()
-      const landPrice = landDetails.landPrice.toNumber()
-
-      receivedRequests.push({
-        requestId: id,
-        landId: landId,
-        landAddress: landDetails.landAddress,
-        landPrice,
-        buyerId: request.buyerId,
-      })
-    }
-
-    res.render('listings/owner.ejs', {
-      landDetailsArray,
-      landSaleArray,
-      receivedRequests,
-    })
-  } catch (error) {
-    console.error('Error fetching owner details:', error)
-    res.status(500).send('Failed to fetch owner details.')
-  }
-})
-
-app.post('/gotuserdetails', ensureWalletAddress, async (req, res) => {
-  try {
-    const { username, age, city, aadharno, panno, emailid } = req.body
-    const contract = new ethers.Contract(contractAddress, contractABI, signer)
-    const tx = await contract.registerUser(
-      username,
-      age,
-      city,
-      aadharno,
-      panno,
-      emailid,
-      {
-        gasLimit: 3000000,
-        gasPrice: ethers.utils.parseUnits('100', 'gwei'),
-      }
-    )
-    await tx.wait()
-    res.redirect('/registeredUsers')
-  } catch (error) {
-    console.error('Error registering user:', error)
-    res.status(500).send('Failed to register user.')
-  }
-})
-
-app.get('/registeredUsers', ensureWalletAddress, async (req, res) => {
-  try {
-    const contract = new ethers.Contract(contractAddress, contractABI, signer)
-    const userDetails = await contract.UserMapping(walletAddress)
-    if (!userDetails.id) {
-      return res.status(404).send('User not found')
-    }
-
-    const userObject = {
-      id: userDetails.id,
-      name: userDetails.name,
-      age: userDetails.age.toNumber(),
-      city: userDetails.city,
-      aadharNumber: userDetails.aadharNumber,
-      panNumber: userDetails.panNumber,
-      email: userDetails.email,
-    }
-
-    const landDetailsArray = []
-    const landIds = await contract.ReturnAllLandList()
-    for (let i = 0; i < landIds.length; i++) {
-      const landId = landIds[i]
-      const landDetails = await contract.lands(landId)
-      const id = landDetails.id.toNumber()
-      const area = landDetails.area.toNumber()
-      const landPrice = landDetails.landPrice.toNumber()
-      const landObject = {
-        id,
-        area,
-        landAddress: landDetails.landAddress,
-        landPrice,
-      }
-      landDetailsArray.push(landObject)
-    }
-
-    res.render('listings/buyer.ejs', {
-      landDetailsArray,
-      userObject,
-    })
-  } catch (error) {
-    console.error('Error fetching registered users:', error)
-    res.status(500).send('Failed to fetch registered users.')
-  }
-})
-
-app.post('/gotgovtauth', ensureWalletAddress, async (req, res) => {
-  try {
-    const { username, age, designation, city } = req.body
-    const contract = new ethers.Contract(contractAddress, contractABI, signer)
-    const tx = await contract.addGovtAuthority(
-      walletAddress,
-      username,
-      age,
-      designation,
-      city
-    )
-    await tx.wait()
-    res.render('listings/index.ejs')
-  } catch (error) {
-    console.error('Error registering government authority:', error)
-    res.status(500).json({ error: 'Error registering government authority' })
   }
 })

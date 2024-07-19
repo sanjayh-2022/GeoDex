@@ -1,4 +1,18 @@
 <%layout('./layouts/boilerplate')%>
+<style>
+    .buyerprintingdetails .table a {
+        color: #007bff; /* Link color */
+        text-decoration: underline; /* Underline the link */
+        font-weight: bold; /* Make the link bold */
+        padding: 5px; /* Optional: add some padding */
+        border-radius: 3px; /* Optional: rounded corners */
+    }
+
+    .buyerprintingdetails .table a:hover {
+        color: #0056b3; /* Darker color on hover */
+        background-color: #e0e0e0; /* Optional: add a background color on hover */
+    }
+</style>
 <body>
     <div style="height: 110px;">  </div>
     <section class="mainbuyer py-5" >
@@ -10,12 +24,12 @@
     </section>
     <section class="buyerprintingdetails">
         <div class="row">
-            <h2 class="ms-3 mb-3">Land requested for registration:</h2>
-            <section class="linebyline ms-5 mt-4">
-                <table class="table">
+            <h2 class="ms-5 mb-3">Land requested for registration:</h2>
+            <section class="linebyline">
+                <table class="table" style="margin-left: 60px ;width:90%; border-radius: 10px; border: 1px solid gray; border-collapse: separate; ">
                     <thead>
                         <tr>
-                            <th scope="col">Land id</th>
+                            <th scope="col"> Land id</th>
                             <th scope="col">Property ID</th>
                             <th scope="col">Land Survey No</th>
                             <th scope="col">Land address</th>
@@ -35,9 +49,9 @@
     </section>
     <section class="buyerprintingdetails">
         <div class="row">
-            <h2 class="ms-3 mb-3">Buyer requested for registration:</h2>
-            <section class="linebyline ms-5 mt-4">
-                <table class="table" id="buyerRegistrationTable">
+            <h2 class="ms-5 mb-3 mt-3">User requests for verification:</h2>
+            <section class="linebyline mt-2">
+                <table class="table" id="buyerRegistrationTable" style="margin-left: 60px ;width:90%; border-radius: 10px; border: 1px solid gray; border-collapse: separate; ">
                     <thead>
                         <tr>
                             <th scope="col">Buyer Name</th>
@@ -57,19 +71,20 @@
     </section>
     <section class="buyerprintingdetails">
         <div class="row ms-5">
-            <h2 class="ms-4 mb-3">Approved Sale Requests:</h2>
-            <p class="offset-1 mt-2">No approved sale requests found.</p>
-            <div class="card col-lg-4 mb-3 offset-1">
+            <h2 class="ms-4 mb-3 mt-3">Approved Sale Requests:</h2>
+            <div class="card col-lg-4 mb-3 offset-1 mt-2">
                 <div class="card-body">
-                    <h5 class="card-title">Land ID: </h5>
-                    <p class="card-text">Land Address:</p>
-                    <p class="card-text">Land Price:  </p>
-                    <p class="card-text">Buyer ID:</p>
-                    <p class="card-text">Buyer Name:</p>
-                    <p class="card-text">Buyer Email:  </p>
+                    <h5 class="card-title" style="margin-top: 30px;">Land ID: </h5>
+                    <p class="card-text" style="margin-top: 20px;">Owner Address:</p>
+                    <p class="card-text" style="margin-top: 20px;">Owner ID:</p>
+                    <p class="card-text" style="margin-top: 20px;">Buyer Address:</p>
+                    <p class="card-text" style="margin-top: 20px;">Buyer ID:</p>
+                    <p class="card-text"style="margin-top: 20px;">Proof URL:</p>
+                    <button id="approveBtn" class="button btn-dark mt-3">Approve Sale</button>
                 </div>
             </div>
         </div>
+        <div style="height: 220px;">  </div>
     </section>
 
     <script src="https://unpkg.com/web3modal"></script>
@@ -80,6 +95,7 @@
         const contractABI = JSON.parse('<%- JSON.stringify(contractABI) %>');
         const contractABI2 = JSON.parse('<%- JSON.stringify(contractABI2) %>');
         const contractAddress = "0x2A609e6A814B61b1B0F99C4490CAccEf52ab1653"; // Your contract address
+        const contractAddress2='0x7E258885ff140E1cBBFba3aA37712055C9422a89'
         const db = Gun(['http://localhost:8765/gun'])
         
         async function getUserDetails() {
@@ -150,6 +166,7 @@
                 console.log('Transaction Receipt:', receipt);
                 getUserDetails();
                 // Optionally, update UI or perform other actions after verification
+                window.location.reload(true);
             } catch (error) {
                 console.error('Error approving user:', error);
             }
@@ -198,11 +215,12 @@
                                     <td>${propertyID}</td>
                                     <td>${surveyNo}</td>
                                     <td>${lands.landAddress}</td>
+                                    <td>${lands.area}</td>
                                     <td>${lands.landPrice}</td>
-                                    <td>${fileUrl}</td>
+                                    <td><a href=${fileUrl} target="_blank">View Document</a></td>
                                     <td>${lands.ownerId}</td>
                                     <td>
-                                        <button class="btn btn-dark approve-land-button" data-userid="${landId}">
+                                        <button class="btn btn-dark approve-land-button " data-userid="${landId}">
                                                 <i class="bi bi-check"></i> Approve
                                         </button>
                                     </td>
@@ -214,6 +232,7 @@
                         });
                     }
                 }
+                displayApprovedSaleRequest();       
             } catch (error) {
                 console.error('Error fetching land details:', error);
             }
@@ -223,7 +242,6 @@
             try {
                 await window.ethereum.request({ method: 'eth_requestAccounts' });
                 const provider = new ethers.providers.Web3Provider(window.ethereum);
-                const contractAddress2='0x7E258885ff140E1cBBFba3aA37712055C9422a89'
                 const signer = provider.getSigner();
                 const contract = new ethers.Contract(contractAddress, contractABI, signer);             
                 const lands= await contract.getLandDetails(landId);
@@ -239,7 +257,7 @@
                     if (data) {
                         const { NFT_token_uri } = data;
                         console.log('Token URI', NFT_token_uri);
-                        //mintNFTWithTokenURI(landId, ownerAddress, NFT_token_uri);
+                        mintNFTWithTokenURI(landId, ownerAddress, NFT_token_uri);
                     } else {
                         console.log('No user details found for the given hash.');
                     }
@@ -262,6 +280,7 @@
                 console.log(`NFT minted successfully for land ID ${landId}.`);
                 console.log('Transaction Receipt:', receipt);
                 getLandDetails();
+                window.location.reload(true);
             } catch (error) {
                 console.error('Error minting NFT:', error);
             }
@@ -282,7 +301,61 @@
                 }
             }
         });
-        
-    
+
+        async function displayApprovedSaleRequest() {
+            await window.ethereum.request({ method: 'eth_requestAccounts' });
+            const provider = new ethers.providers.Web3Provider(window.ethereum);
+            const signer = provider.getSigner();
+            const contract = new ethers.Contract(contractAddress, contractABI, signer);
+            try {
+                const { saleTokenId, landId } = await contract.getLatestSaleAndLandId();
+                console.log('Sale ID:', saleTokenId, landId);
+                const saleId = parseInt(saleTokenId, 16)
+                const landId2 = parseInt(landId, 16)
+                console.log('User ID (Integer):', saleId, landId2)
+                if (saleTokenId !== landId) {
+                    const saleDetails = await contract.getSaleDetailsForApproval(landId2-(landId2-saleId-1));
+                    console.log('Sale Details:', saleDetails);
+                    document.querySelector('.card-title').textContent = `Land ID: ${landId2-(landId2-saleId-1)}`;
+                    document.querySelector('.card-text:nth-of-type(1)').textContent = `Owner Address: ${saleDetails.ownerAddress}`;
+                    document.querySelector('.card-text:nth-of-type(2)').textContent = `Owner ID: ${saleDetails.ownerId}`;
+                    document.querySelector('.card-text:nth-of-type(3)').textContent = `Buyer Address: ${saleDetails.buyer}`;
+                    document.querySelector('.card-text:nth-of-type(4)').textContent = `Buyer ID: ${saleDetails.buyerId}`;
+                    document.querySelector('.card-text:nth-of-type(5)').textContent = `Proof URL: ${saleDetails.proofUrl}`;
+
+                    const approveButton = document.getElementById('approveBtn');
+                    approveButton.addEventListener('click', () => approveSaleByAuthority(landId2 - (landId2 - saleId - 1)));
+                }
+            } catch (error) {
+                console.error('Error fetching sale details:', error);
+            }
+        }
+
+        async function approveSaleByAuthority(landId) {
+            try {
+                await window.ethereum.request({ method: 'eth_requestAccounts' });
+                const provider = new ethers.providers.Web3Provider(window.ethereum);
+                const signer = provider.getSigner();
+                const contract = new ethers.Contract(contractAddress, contractABI, signer);
+                const contract2 = new ethers.Contract(contractAddress2, contractABI2, signer);
+                const saleDetails = await contract.getSaleDetailsForApproval(landId);
+                const from = saleDetails.ownerAddress;
+                const to = saleDetails.buyer;
+                console.log(from, to, landId)
+                const tokenId=landId;
+                const transferTx = await contract2.transferNFT(from, to, tokenId);
+                const transferReceipt = await transferTx.wait();
+                console.log('NFT transferred:', transferReceipt);
+                const approveTx = await contract.approveSaleByAuthority(landId);
+                const approveReceipt = await approveTx.wait();
+                console.log('Sale approved by authority:', approveReceipt);
+                alert('Sale approved successfully by authority!');
+                window.location.reload(true);
+            } catch (error) {
+                console.error('Error approving sale by authority:', error);
+            }
+        }
+
+         
     </script>
 </body>

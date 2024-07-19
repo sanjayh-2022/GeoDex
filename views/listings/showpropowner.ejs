@@ -106,36 +106,12 @@
                     <td><button class="button btn-dark approveBtn">Approve</button></td>
                 `;
                 buyerDetailsTable.appendChild(row);
-
+        
                 const approveButtons = document.getElementsByClassName('approveBtn');
                 Array.from(approveButtons).forEach((button, index) => {
                     button.addEventListener('click', (e) => {
                         e.preventDefault();
                         document.getElementById('proofSection').style.display = 'block';
-                        document.getElementById('proofForm').onSubmit = async (e) => {
-                            e.preventDefault();
-                            document.getElementById('submitProofBtn').addEventListener('click', function(event) {
-                                event.preventDefault();
-                            });
-                            const fileInput = document.getElementById('proofFile');
-                            const file = fileInput.files[0];
-                            const formData = new FormData();
-                            formData.append('file', file);
-                     
-                            try {
-                                const response = await fetch('/uploadDocument', {
-                                    method: 'POST',
-                                    body: formData
-                                });
-                                const result = await response.json();
-                                const hash = result.ipfsHash;
-                                console.log(hash)
-                                const proofURL=`https://gateway.pinata.cloud/ipfs/${hash}`
-                                approveSaleByOwner(contract, landId, proofURL);
-                            } catch (error) {
-                                console.error('Error uploading proof:', error);
-                            }
-                        };
                     });
                 });
                 console.log('Buyer Details:', buyer);
@@ -144,6 +120,40 @@
             }
         }
 
+        document.getElementById('proofForm').addEventListener('submit', async function (event) {
+            event.preventDefault();
+            const fileInput = document.getElementById('proofFile');
+            const file = fileInput.files[0];
+            const formData = new FormData();
+            formData.append('file', file);
+            await submitForm(formData);
+        });
+        
+        async function submitForm(formData) {
+            try {
+                const response = await fetch('/uploadDocument', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                const hash = result.ipfsHash;
+                console.log(hash);
+                const proofURL = `https://gateway.pinata.cloud/ipfs/${hash}`;
+                const urlParams = new URLSearchParams(window.location.search);
+                const landId = urlParams.get('landId');
+                if (landId) {
+                    const provider = new ethers.providers.Web3Provider(window.ethereum);
+                    const signer = provider.getSigner();
+                    const contract = new ethers.Contract(contractAddress, contractABI, signer);
+                    await approveSaleByOwner(contract, landId, proofURL);
+                } else {
+                    console.error('Land ID not found in URL parameters.');
+                }
+            } catch (error) {
+                console.error('Error uploading proof:', error);
+            }
+        }
+        
         async function approveSaleByOwner(contract, landId, proofURL) {
             try {
                 const tx = await contract.approveSaleByOwner(landId, proofURL);

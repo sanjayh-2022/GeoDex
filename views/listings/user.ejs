@@ -1,8 +1,14 @@
 <% layout('./layouts/boilerplate') %>
+<style>
+    body {
+        overflow-x: hidden;
+    }
+</style>
 <body>
     <div style="height: 110px;">  </div>
-    <h2>User Details</h2>
-    <div id="userDetails">
+    <h2 style="margin-left: 50px;" class="mb-3">User Details:</h2>
+    <div id="userDetails" class="row mt-3 offset-2" style="overflow: hidden !important;">
+        
         <p>User ID: <span id="userId"></span></p>
         <p>Address: <span id="userAddress"></span></p>
         <p>Name: <span id="userName"></span></p>
@@ -11,19 +17,19 @@
         <p>Phone Number: <span id="userPhone"></span></p>
         <p>Email: <span id="userEmail"></span></p>
         <p>Verified: <span id="userVerified"></span></p>
-    </div>
-    <button id="registerLandButton" class="btn btn-dark mt-3" disabled>Register a Land</button>
-
-    <h2>Owned Lands</h2>
-    <div id="ownedLands" class="row">
+        <button id="registerLandButton" class="btn btn-dark mt-3" style="width: 266px;">Register a Land</button>
+    </div>
+    <h2 style="margin-left: 70px; margin-top:50px;">Owned Lands</h2>
+    <div id="ownedLands" class="row offset-1">
         <!-- Land cards will be dynamically inserted here -->
     </div>
 
-    <h2>Available Lands for Sale</h2>
-    <div id="availableLands" class="row">
+    <h2 style="margin-left: 70px;  margin-top:50px">Available Lands for Sale</h2>
+    <div id="availableLands" class="row offset-1">
         <!-- Available land cards will be dynamically inserted here -->
     </div>
-
+    <div style="height: 110px;">  </div>
+    
     <script src="https://unpkg.com/web3modal"></script>
     <script src="https://unpkg.com/@walletconnect/web3-provider/dist/umd/index.min.js"></script>
     <script src="https://cdn.ethers.io/lib/ethers-5.0.umd.min.js"></script>
@@ -181,4 +187,3 @@
         getUserDetails();
     </script>
 </body>
-</html>

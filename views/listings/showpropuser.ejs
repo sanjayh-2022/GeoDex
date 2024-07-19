@@ -19,12 +19,16 @@
             </div>
             <button id="buyButton" class="mt-3 button btn-dark">Request For Buy</button>
         </div>
+        <script>
+        </script>
+    
         <div style="height: 200px;">  </div>
     </section>
 
     <script src="https://unpkg.com/web3modal"></script>
     <script src="https://unpkg.com/@walletconnect/web3-provider/dist/umd/index.min.js"></script>
     <script src="https://cdn.ethers.io/lib/ethers-5.0.umd.min.js"></script>
+
     <script>
         const contractABI = JSON.parse('<%- JSON.stringify(contractABI) %>');
         const contractAddress = "0x2A609e6A814B61b1B0F99C4490CAccEf52ab1653"; // Your contract address
@@ -52,9 +56,9 @@
                 document.getElementById('price').innerText = landDetails.landPrice;
                 document.getElementById('phno').innerText = landDetails.ownerPhoneNumber;
                 document.getElementById('email').innerText = landDetails.ownerEmail;
-              
                 const isLandOwner = (myDetails.phoneNumber === landDetails.ownerPhoneNumber &&
                 myDetails.email === landDetails.ownerEmail);
+                
                 const buyButton = document.getElementById('buyButton');
                 if (isLandOwner) {
                     buyButton.disabled = true;

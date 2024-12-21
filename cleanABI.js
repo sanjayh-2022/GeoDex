@@ -2,7 +2,7 @@ const fs = require('fs')
 const path = require('path')
 
 // Assuming 'LandRegistry.json' contains your ABI
-const abiPath = path.resolve(__dirname, 'public', 'LandRegistry.json')
+const abiPath = path.resolve(__dirname, 'public', 'LandNFT.json')
 
 try {
   // Read ABI file
@@ -24,11 +24,11 @@ try {
   const cleanedAbiPath = path.resolve(
     __dirname,
     'public',
-    'cleanedLandRegistry.json'
+    'cleanedLandNFT.json'
   )
   fs.writeFileSync(cleanedAbiPath, JSON.stringify(cleanAbi, null, 2))
 
-  console.log('ABI cleaned and saved to cleanedLandRegistry.json')
+  console.log('ABI cleaned and saved to cleanedLandNFT.json')
 } catch (error) {
   console.error('Error cleaning ABI:', error.message)
 }

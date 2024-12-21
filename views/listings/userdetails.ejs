@@ -146,16 +146,17 @@
                         if (data.success) {
                             alert('Registration successful!');
                         } else {
-                            alert('Registration failed.');
+                            //alert('Registration failed.');
+                            window.location.href = `/user`
                         }
                     })
                     .catch(error => {
                         console.error('Error sending transaction data to server:', error);
-                        alert('Failed to register user.');
+                         window.location.href = `/user`
                     });
                 } catch (error) {
                     console.error('Error registering user:', error);
-                    alert('Failed to register user.');
+                     window.location.href = `/user`
                 }
             } else {
                 alert('Contract is not initialized');

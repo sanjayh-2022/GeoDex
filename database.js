@@ -2,71 +2,9 @@
 const Gun = require('gun')
 const CryptoJS = require('crypto-js')
 
-const gun = Gun(['http://localhost:8765/gun'])
+const gun = Gun(['https://your-vercel-deployment-url.vercel.app/api/gun']);
 
-// // Initialize Gun with a local instance
-// const gun = Gun()
 
-// // Function to generate SHA-256 hash from user data
-// function generateHash(userData) {
-//   // Convert userData to a string for hashing
-//   const userDataString = JSON.stringify(userData)
-
-//   // Generate SHA-256 hash
-//   const hash = CryptoJS.SHA256(userDataString).toString(CryptoJS.enc.Hex)
-//   return hash
-// }
-
-// // Example function to store user details and return the generated hash
-// function storeUserDetails(userData) {
-//   // Generate SHA-256 hash from user data
-//   const hash = generateHash(userData)
-
-//   // Store user data using the generated hash as key
-//   gun.get('user_details').get(hash).put(userData)
-
-//   // Return the generated hash
-//   return hash
-// }
-
-// // Example function to retrieve user details using a given hash
-// function retrieveUserDetails() {
-//   // Retrieve user data using the provided hash
-//   return new Promise((resolve, reject) => {
-//     gun
-//       .get('user_details')
-//       .get('a591a121138d4bd0b1d3e2a36c2e964901e3abf1990388b958b3783ee6a0fcc1')
-//       .once((data) => {
-//         if (data) {
-//           resolve(data)
-//         } else {
-//           reject(new Error('User data not found'))
-//         }
-//       })
-//   })
-// }
-
-// // Example usage:
-// const userData = {
-//   name: 'John Doe',
-//   aadharNo: '1234-5678-9012',
-//   panNo: 'ABCDE1234F',
-//   phoneNumber: '1234567890',
-//   email: 'john.doe@example.com',
-// }
-
-// // // Store user details and get the generated hash
-// // const hash = storeUserDetails(userData)
-// // console.log('Generated Hash:', hash)
-
-// // Retrieve user details using the generated hash
-// retrieveUserDetails()
-//   .then((data) => {
-//     console.log('Retrieved User Details:', data.aadharNo, data.panNo)
-//   })
-//   .catch((error) => {
-//     console.error('Error retrieving user details:', error)
-//   })
 
 // retrieveData.js
 

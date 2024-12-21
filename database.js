@@ -2,7 +2,7 @@
 const Gun = require('gun')
 const CryptoJS = require('crypto-js')
 
-const gun = Gun(['https://your-vercel-deployment-url.vercel.app/api/gun']);
+const gun = Gun(['https://geo-ccabet6dn-sanjayh-2022s-projects.vercel.app//api/gun']);
 
 
 

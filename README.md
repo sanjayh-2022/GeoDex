@@ -7,7 +7,8 @@ Our platform provides a decentralized land registry where ownership records are 
 
 The system automates property transactions through smart contracts, minting NFTs for ownership representation and enabling seamless transfers. By reducing intermediaries and automating processes, GeoDex makes real estate transactions more time and cost-efficient.
 
-**🎥 Demo video link:** [https://youtu.be/CmqegaqZsFE](https://youtu.be/CmqegaqZsFE)
+**🎥 Demo video link:** [https://youtu.be/CmqegaqZsFE](https://youtu.be/CmqegaqZsFE) <br>
+**🌐 Devfolio link:** [https://devfolio.co/projects/geodex-83ef](https://devfolio.co/projects/geodex-83ef)
 
 ## Technologies Used 🛠️
 - **Solidity**: Smart contract development

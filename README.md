@@ -19,7 +19,7 @@ The system automates property transactions through smart contracts, minting NFTs
 - **Express.js**: Backend framework
 - **Hardhat**: Development environment
 - **GUN DB**: Decentralized database
-- **Reclaim Protocol SDK**: User verification
+- **Reclaim Protocol SDK**: User verification.
 
 ## Getting Started 🚀
 
